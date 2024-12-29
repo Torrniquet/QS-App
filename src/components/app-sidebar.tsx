@@ -15,7 +15,7 @@ const menuItems = [
   {
     title: 'Search',
     icon: Search,
-    url: '/',
+    url: '/search',
   },
   {
     title: 'Watchlist',
