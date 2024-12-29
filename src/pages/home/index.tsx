@@ -11,18 +11,14 @@ import {
 import { ArrowUpIcon, ArrowDownIcon, SearchIcon } from 'lucide-react'
 import { Link, useSearchParams } from 'react-router'
 import { Skeleton } from '@/components/ui/skeleton'
-import {
-  POPULAR_STOCKS_COUNT,
-  Stock,
-  StockFilters,
-  stockKeys,
-  usePopularStocks,
-  useSearchStocks,
-} from './hooks'
 import { cn } from '@/lib/utils'
 import { useIsFetching } from '@tanstack/react-query'
-import { useCallback, useEffect } from 'react'
-import { useRef } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
+import { POPULAR_STOCKS_COUNT } from './usePopularStocks'
+import { Stock, StockFilters } from '@/lib/types'
+import { stockKeys } from '@/lib/queryKeys'
+import { useSearchStocks } from './useSearchStocks'
+import { usePopularStocks } from './usePopularStocks'
 
 const QUERY_PARAMS = {
   SEARCH: 'search',
