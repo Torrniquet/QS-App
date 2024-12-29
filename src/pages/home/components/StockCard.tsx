@@ -35,7 +35,7 @@ export function StockCard({ stock }: { stock: Stock }) {
               ) : (
                 <ArrowDownIcon className="h-4 w-4" />
               )}
-              {stock.change.toFixed(2)} ({stock.changePercent.toFixed(2)}%)
+              ${stock.change.toFixed(2)} ({stock.changePercent.toFixed(2)}%)
             </span>
             <span className="text-sm text-gray-600">
               Vol: {(stock.volume / 10_000_000).toFixed(1)}M
