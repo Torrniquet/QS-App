@@ -3,8 +3,8 @@ import { BASE_STOCK_FILTERS } from '@/lib/constants'
 import { snapshotKeys, stockKeys } from '@/lib/queryKeys'
 import { useQuery } from '@tanstack/react-query'
 import { useMemo } from 'react'
-import { transformStockData } from './utils'
-import { createLookupMap } from './utils'
+import { transformStockData } from '../utils'
+import { createLookupMap } from '../utils'
 
 export const POPULAR_STOCKS_COUNT = 8
 
@@ -14,7 +14,6 @@ export function usePopularStocks() {
   const { data: tickerDetails } = useQuery({
     queryKey: stockKeys.popular(),
     queryFn: async () => {
-      // Try individual requests for better reliability
       const tickers = POPULAR_TICKERS.split(',')
 
       // I don't want to do this

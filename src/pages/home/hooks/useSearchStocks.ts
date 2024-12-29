@@ -3,7 +3,7 @@ import { BASE_STOCK_FILTERS } from '@/lib/constants'
 import { stockKeys } from '@/lib/queryKeys'
 import { StockFilters } from '@/lib/types'
 import { useInfiniteQuery } from '@tanstack/react-query'
-import { createLookupMap, transformStockData } from './utils'
+import { createLookupMap, transformStockData } from '../utils'
 import { ITickersQuery } from '@polygon.io/client-js'
 
 export function useSearchStocks(filters: StockFilters) {
