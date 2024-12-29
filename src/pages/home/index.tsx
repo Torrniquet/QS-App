@@ -12,6 +12,7 @@ import { ArrowUpIcon, ArrowDownIcon, SearchIcon } from 'lucide-react'
 import { Link, useSearchParams } from 'react-router'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
+  POPULAR_STOCKS_COUNT,
   Stock,
   StockFilters,
   stockKeys,
@@ -59,10 +60,10 @@ function StockCardSkeleton() {
   )
 }
 
-function StockCardSkeletonList() {
+function StockCardSkeletonList({ count }: { count: number }) {
   return (
     <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-      {Array.from({ length: 30 }).map((_, index) => (
+      {Array.from({ length: count }).map((_, index) => (
         <StockCardSkeleton key={index} />
       ))}
     </div>
@@ -216,15 +217,16 @@ function SearchStocks() {
   }
 
   const {
-    searchStocks,
-    isSearchStocksLoading,
-    searchStocksError,
-    isSearchStocksError,
-    searchFetchNextPage,
-    searchHasNextPage,
-    searchIsFetching,
-    isSnapshotFetching,
+    data,
+    isLoading,
+    error,
+    isError,
+    fetchNextPage,
+    hasNextPage,
+    isFetching,
   } = useSearchStocks(stockFilters)
+
+  const stocks = data?.pages.flatMap((page) => page.stocks) ?? []
 
   // Keep track of current observer
   const currentObserver = useRef<IntersectionObserver | null>(null)
@@ -237,12 +239,12 @@ function SearchStocks() {
         currentObserver.current.disconnect()
       }
 
-      if (!node || !searchHasNextPage || searchIsFetching) return
+      if (!node || !hasNextPage || isFetching) return
 
       const observer = new IntersectionObserver(
         (entries) => {
           if (entries[0].isIntersecting) {
-            void searchFetchNextPage()
+            void fetchNextPage()
           }
         },
         { threshold: 0.5 }
@@ -251,7 +253,7 @@ function SearchStocks() {
       observer.observe(node)
       currentObserver.current = observer
     },
-    [searchFetchNextPage, searchHasNextPage, searchIsFetching]
+    [fetchNextPage, hasNextPage, isFetching]
   )
 
   // Clean up on unmount
@@ -263,23 +265,20 @@ function SearchStocks() {
     }
   }, [])
 
-  const isInitialSnapshotFetch = searchStocks.length === 0 && isSnapshotFetching
-  const isPaginatedSnapshotFetch = searchStocks.length > 0 && isSnapshotFetching
-
-  if (isSearchStocksLoading || isInitialSnapshotFetch) {
-    return <StockCardSkeletonList />
+  if (isLoading) {
+    return <StockCardSkeletonList count={30} />
   }
 
-  if (isSearchStocksError) {
+  if (isError) {
     return (
       <div className="flex h-full w-full flex-col items-center justify-center">
         <p className="text-2xl font-bold">Error loading stocks</p>
-        <p className="text-lg text-gray-600">{searchStocksError?.message}</p>
+        <p className="text-lg text-gray-600">{error?.message}</p>
       </div>
     )
   }
 
-  if (!searchStocks.length) {
+  if (!stocks.length) {
     return (
       <div className="flex h-full w-full flex-col items-center justify-center">
         <p className="text-2xl font-bold">No results found</p>
@@ -290,27 +289,24 @@ function SearchStocks() {
     )
   }
 
-  console.log('searchHasNextPage', searchHasNextPage)
-
   return (
     <div className="flex flex-col gap-6">
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {searchStocks.map((stock) => (
+        {stocks.map((stock) => (
           <StockCard key={stock.symbol} stock={stock} />
         ))}
       </div>
 
-      {searchIsFetching ||
-        (isPaginatedSnapshotFetch && (
-          // Show skeleton cards in the same grid layout
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {Array.from({ length: 10 }).map((_, index) => (
-              <StockCardSkeleton key={index} />
-            ))}
-          </div>
-        ))}
+      {isFetching && (
+        // Show skeleton cards in the same grid layout
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 3 }).map((_, index) => (
+            <StockCardSkeleton key={index} />
+          ))}
+        </div>
+      )}
 
-      {searchHasNextPage && (
+      {hasNextPage && (
         // Invisible sentinel for intersection observer
         <div
           ref={handleSentinelRef}
@@ -331,7 +327,7 @@ function PopularStocks() {
   } = usePopularStocks()
 
   if (isPopularStocksLoading) {
-    return <StockCardSkeletonList />
+    return <StockCardSkeletonList count={POPULAR_STOCKS_COUNT} />
   }
 
   if (isPopularStocksError) {

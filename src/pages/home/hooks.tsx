@@ -1,6 +1,6 @@
 import { restClient, ITickersQuery, ISnapshot } from '@polygon.io/client-js'
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useMemo } from 'react'
 
 const rest = restClient(import.meta.env.VITE_API_POLY_KEY)
 
@@ -49,10 +49,13 @@ function transformStockData(
   }
 }
 
-function createLookupMap<SnapshotInfo>(
-  items: SnapshotInfo[],
+function createLookupMap<SnapshotInfo>({
+  items,
+  getKey,
+}: {
+  items: SnapshotInfo[]
   getKey: (item: SnapshotInfo) => string
-): Map<string, SnapshotInfo> {
+}): Map<string, SnapshotInfo> {
   return new Map(items.map((item) => [getKey(item), item]))
 }
 
@@ -65,6 +68,9 @@ export type Stock = {
   volume: number
 }
 
+// To scope this side project down to stocks only
+// You could of course expand if you wish
+// but it could become pretty big haha
 const BASE_STOCK_FILTERS = {
   active: 'true',
   market: 'stocks',
@@ -72,11 +78,10 @@ const BASE_STOCK_FILTERS = {
 } as const
 
 export function useSearchStocks(filters: StockFilters) {
-  // Keep the infinite query for tickers
-  const tickersQuery = useInfiniteQuery({
+  return useInfiniteQuery({
     queryKey: stockKeys.filtered(filters),
     queryFn: async ({ pageParam }) => {
-      const response = await rest.reference.tickers({
+      const tickersResponse = await rest.reference.tickers({
         ...BASE_STOCK_FILTERS,
         search: filters.search,
         exchange: filters.exchange,
@@ -84,10 +89,41 @@ export function useSearchStocks(filters: StockFilters) {
         limit: 50,
       })
 
+      if (!tickersResponse.results?.length) {
+        return {
+          stocks: [],
+          nextCursor: null,
+        }
+      }
+
+      const tickers = tickersResponse.results.map((result) => result.ticker)
+
+      const snapshotsResponse = await rest.stocks.snapshotAllTickers({
+        tickers: tickers.join(','),
+      })
+
+      const snapshotMap = createLookupMap({
+        items: snapshotsResponse.tickers || [],
+        getKey: (snapshot) => snapshot.ticker!,
+      })
+
+      const tickerDetailsMap = createLookupMap({
+        items: tickersResponse.results,
+        getKey: (ticker) => ticker.ticker,
+      })
+
+      // Transform the data
+      const stocks = tickers.map((ticker) =>
+        transformStockData(
+          snapshotMap.get(ticker) || { ticker },
+          tickerDetailsMap.get(ticker)
+        )
+      )
+
       return {
-        results: response.results,
-        nextCursor: response.next_url
-          ? response.next_url.split('cursor=')[1]
+        stocks,
+        nextCursor: tickersResponse.next_url
+          ? tickersResponse.next_url.split('cursor=')[1]
           : null,
       }
     },
@@ -95,84 +131,9 @@ export function useSearchStocks(filters: StockFilters) {
     initialPageParam: undefined as ITickersQuery['cursor'],
     enabled: !!filters.search,
   })
-
-  // Instead of state for tracking status, use a ref to track processed tickers
-  const processedTickersRef = useRef(new Set<string>())
-  const [snapshotFetchStatus, setSnapshotFetchStatus] = useState<
-    'idle' | 'fetching' | 'success' | 'error'
-  >('idle')
-  const [stocks, setStocks] = useState<Stock[]>([])
-
-  // Effect to handle new tickers as they come in
-  useEffect(() => {
-    if (!tickersQuery.data?.pages) return
-
-    // Get all new tickers we haven't processed yet
-    const allTickers = tickersQuery.data.pages.flatMap((page) =>
-      page.results.map((result) => result.ticker)
-    )
-
-    const newTickers = allTickers.filter(
-      (ticker) => !processedTickersRef.current.has(ticker)
-    )
-
-    if (newTickers.length === 0 || snapshotFetchStatus === 'fetching') return
-
-    // Fetch snapshots for new tickers only
-    const fetchSnapshots = async () => {
-      setSnapshotFetchStatus('fetching')
-      const response = await rest.stocks.snapshotAllTickers({
-        tickers: newTickers.join(','),
-      })
-
-      if (!response.tickers) {
-        setSnapshotFetchStatus('error')
-        return
-      }
-
-      // Create lookup maps
-      const snapshotMap = createLookupMap(
-        response.tickers,
-        (snapshot) => snapshot.ticker!
-      )
-
-      const tickerDetailsMap = new Map(
-        tickersQuery.data.pages.flatMap((page) =>
-          page.results.map((ticker) => [ticker.ticker, ticker])
-        )
-      )
-
-      // Transform and append new stocks
-      const newStocks = newTickers.map((ticker) =>
-        transformStockData(
-          snapshotMap.get(ticker) || { ticker },
-          tickerDetailsMap.get(ticker)
-        )
-      )
-
-      // Mark these tickers as processed
-      newTickers.forEach((ticker) => processedTickersRef.current.add(ticker))
-
-      // Append new stocks to state
-      setStocks((prev) => [...prev, ...newStocks])
-    }
-
-    fetchSnapshots()
-      .then(() => setSnapshotFetchStatus('success'))
-      .catch(() => setSnapshotFetchStatus('error'))
-  }, [snapshotFetchStatus, tickersQuery.data?.pages])
-
-  return {
-    searchStocks: stocks,
-    isSearchStocksLoading: tickersQuery.isLoading,
-    searchStocksError: tickersQuery.error,
-    isSearchStocksError: tickersQuery.isError,
-    searchIsFetching: tickersQuery.isFetching,
-    searchFetchNextPage: tickersQuery.fetchNextPage,
-    searchHasNextPage: tickersQuery.hasNextPage,
-    isSnapshotFetching: snapshotFetchStatus === 'fetching',
-  }
 }
+
+export const POPULAR_STOCKS_COUNT = 8
 
 export function usePopularStocks() {
   const POPULAR_TICKERS = 'AAPL,MSFT,GOOGL,AMZN,META,NVDA,TSLA,BRK.A'
@@ -185,7 +146,7 @@ export function usePopularStocks() {
 
       // I don't want to do this
       // We need to do this because the API endpoint for tickers doesn't support one param for multiple tickers
-      // See endpoint used under the hood: /v3/reference/tickers
+      // See endpoint used under the hood: https://polygon.io/docs/stocks/get_v3_reference_tickers
       const responses = await Promise.all(
         tickers.map((ticker) =>
           rest.reference.tickers({
@@ -218,7 +179,10 @@ export function usePopularStocks() {
   const popularStocks = useMemo(() => {
     if (!tickerDetails || !snapshots) return []
 
-    const detailsMap = createLookupMap(tickerDetails, (t) => t.ticker)
+    const detailsMap = createLookupMap({
+      items: tickerDetails,
+      getKey: (t) => t.ticker,
+    })
 
     return snapshots
       .filter((s) => s.day && s.prevDay)
@@ -226,7 +190,7 @@ export function usePopularStocks() {
         transformStockData(snapshot, detailsMap.get(snapshot.ticker!))
       )
       .sort((a, b) => a.name.localeCompare(b.name))
-      .slice(0, 8)
+      .slice(0, POPULAR_STOCKS_COUNT)
   }, [tickerDetails, snapshots])
 
   return {
