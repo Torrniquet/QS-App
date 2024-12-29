@@ -197,7 +197,7 @@ export function HomePage() {
             key={stock.ticker}
             className="transition-shadow hover:shadow-lg"
           >
-            <Link to={`/stock/${stock.ticker}`}>
+            <Link to={`/stocks/${stock.ticker}`}>
               <CardHeader>
                 <CardTitle className="flex items-center justify-between">
                   <span>{stock.ticker}</span>
