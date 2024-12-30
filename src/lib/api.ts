@@ -1,3 +1,5 @@
-import { restClient } from '@polygon.io/client-js'
+import { restClient, websocketClient } from '@polygon.io/client-js'
+import { env } from './env'
 
-export const rest = restClient(import.meta.env.VITE_API_POLY_KEY)
+export const rest = restClient(env.VITE_API_POLY_KEY)
+export const wsClient = websocketClient(env.VITE_API_POLY_KEY)

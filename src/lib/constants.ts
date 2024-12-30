@@ -11,3 +11,12 @@ export const QUERY_PARAMS = {
   SEARCH: 'search',
   EXCHANGE: 'exchange',
 } as const
+
+export const ROUTES = {
+  HOME: '/',
+  SEARCH: '/search',
+  WATCHLIST: '/watchlist',
+  COMPARE: '/compare',
+  STOCK_DETAIL: '/stocks/:symbol',
+  NOT_FOUND: '*',
+} as const

@@ -3,6 +3,9 @@ import { RootLayout } from './layouts/RootLayout'
 import { HomePage } from './pages/home'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
+import { StockDetailPage } from './pages/stock-detail'
+import { NotFoundPage } from './pages/not-found'
+import { ROUTES } from './lib/constants'
 
 const queryClient = new QueryClient()
 
@@ -11,8 +14,13 @@ export function App() {
     <QueryClientProvider client={queryClient}>
       <Routes>
         <Route element={<RootLayout />}>
-          <Route path="/" element={<Navigate to="/search" replace />} />
-          <Route path="/search" element={<HomePage />} />
+          <Route
+            path={ROUTES.HOME}
+            element={<Navigate to={ROUTES.SEARCH} replace />}
+          />
+          <Route path={ROUTES.SEARCH} element={<HomePage />} />
+          <Route path={ROUTES.STOCK_DETAIL} element={<StockDetailPage />} />
+          <Route path={ROUTES.NOT_FOUND} element={<NotFoundPage />} />
         </Route>
       </Routes>
 
