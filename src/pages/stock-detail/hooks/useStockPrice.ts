@@ -101,8 +101,9 @@ export function useStockPrice({
     if (snapshot) setLiveData(snapshot)
   }, [snapshot])
 
+  const isRealtime = timeframe === '1D'
   useEffect(() => {
-    if (!symbol || !snapshot || timeframe !== '1D') return
+    if (!symbol || !snapshot || !isRealtime) return
 
     const connect = () => {
       const ws = wsClient.stocks()
@@ -160,11 +161,11 @@ export function useStockPrice({
 
     connect()
     return () => wsRef.current?.close()
-  }, [symbol, snapshot, timeframe])
+  }, [symbol, snapshot, isRealtime])
 
   return {
     priceData: liveData,
-    isLoadingInitialPriceData: isLoading,
+    isPriceDataLoading: isLoading,
     isTradeSocketConnected: connectionState === 'connected',
     isTradeSocketConnecting: connectionState === 'connecting',
     isTradeSocketDisconnected: connectionState === 'disconnected',

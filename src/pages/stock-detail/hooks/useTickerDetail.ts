@@ -10,7 +10,9 @@ const tickerDetailSchema = z.object({
   name: z.string(),
 })
 
-export function useCompanyInfo(symbol: string | undefined) {
+export type TickerDetail = z.infer<typeof tickerDetailSchema>
+
+export function useTickerDetail(symbol: string | undefined) {
   return useQuery({
     queryKey: stockDetailKeys.company(symbol as string),
     queryFn: async () => {

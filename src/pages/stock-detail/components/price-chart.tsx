@@ -1,0 +1,115 @@
+import { useChartData } from '../hooks/useChartData'
+import { Skeleton } from '@/components/ui/skeleton'
+import { useTimeframe } from '../hooks/useTimeframe'
+import {
+  LineChart,
+  Line,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+} from 'recharts'
+import { useQueryClient } from '@tanstack/react-query'
+import { TIMEFRAME_KEY } from '@/lib/queryKeys'
+import { Card, CardContent, CardHeader } from '@/components/ui/card'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+} from '@/components/ui/chart'
+import { getTimeFormatter, Timeframe, timeframeConfig } from '../timeframe'
+import { priceChartConfig } from '../constants'
+
+function PriceChartSkeleton() {
+  return (
+    <Card className="w-full">
+      <CardHeader>
+        <Skeleton className="h-10 w-[300px]" /> {/* Tabs area */}
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-6">
+          {/* Price chart skeleton */}
+          <div className="h-[400px]">
+            <Skeleton className="h-full w-full" />
+          </div>
+          {/* Volume chart skeleton */}
+          <div className="h-[200px]">
+            <Skeleton className="h-full w-full" />
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
+export function PriceChart({ symbol }: { symbol: string | undefined }) {
+  const timeframe = useTimeframe()
+
+  const { chartData, isInitialChartDataLoading } = useChartData({
+    symbol,
+    timeframe,
+  })
+
+  const queryClient = useQueryClient()
+  const updateTimeframe = (timeframe: Timeframe) => {
+    queryClient.setQueryData(TIMEFRAME_KEY, timeframe)
+  }
+
+  if (isInitialChartDataLoading || !chartData) {
+    return <PriceChartSkeleton />
+  }
+
+  return (
+    <Card className="w-full">
+      <CardHeader>
+        <Tabs
+          value={timeframe}
+          onValueChange={(value) => updateTimeframe(value as Timeframe)}
+        >
+          <TabsList>
+            {Object.entries(timeframeConfig).map(([key, { label }]) => (
+              <TabsTrigger key={key} value={key}>
+                {label}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </Tabs>
+      </CardHeader>
+      <CardContent>
+        <div className="h-[400px]">
+          <ChartContainer
+            config={priceChartConfig}
+            className="h-[400px] w-full"
+          >
+            <LineChart data={chartData}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="t" tickFormatter={getTimeFormatter(timeframe)} />
+              <YAxis domain={['auto', 'auto']} />
+              <ChartTooltip content={<ChartTooltipContent />} />
+              <Line
+                type="monotone"
+                dataKey="c"
+                stroke="var(--color-c)"
+                dot={false}
+              />
+            </LineChart>
+          </ChartContainer>
+        </div>
+
+        <div className="mt-6 h-[200px] w-full">
+          <ChartContainer config={priceChartConfig} className="h-full w-full">
+            <BarChart data={chartData}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="t" tickFormatter={getTimeFormatter(timeframe)} />
+              <YAxis />
+              <ChartTooltip content={<ChartTooltipContent />} />
+              <Bar dataKey="v" fill="var(--color-v)" opacity={0.5} />
+            </BarChart>
+          </ChartContainer>
+        </div>
+      </CardContent>
+    </Card>
+  )
+}

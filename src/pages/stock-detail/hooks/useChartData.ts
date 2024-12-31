@@ -82,11 +82,9 @@ export function useChartData({
     if (historicalData) setRealtimeData(historicalData)
   }, [historicalData])
 
-  console.log('historicalData', historicalData)
-
-  // WebSocket for real-time data
+  const isRealtime = timeframe === '1D'
   useEffect(() => {
-    if (!symbol || timeframe !== '1D') return
+    if (!symbol || !isRealtime) return
 
     const connect = () => {
       const ws = wsClient.stocks()
@@ -108,6 +106,8 @@ export function useChartData({
               t: msg.t,
               vw: msg.vw,
             }
+
+            console.log('new data point', dataPoint)
 
             setRealtimeData((prev) => {
               const newData = [...prev, dataPoint].slice(-MAX_DATA_POINTS)
@@ -139,12 +139,12 @@ export function useChartData({
 
     connect()
     return () => wsRef.current?.close()
-  }, [symbol, timeframe])
+  }, [symbol, isRealtime])
 
   return {
-    chartData: timeframe === '1D' ? realtimeData : historicalData,
-    isInitialChartDataLoading: timeframe === '1D' ? false : isLoadingHistorical,
-    isChartRealtime: timeframe === '1D',
+    chartData: isRealtime ? realtimeData : historicalData,
+    isInitialChartDataLoading: isRealtime ? false : isLoadingHistorical,
+    isChartRealtime: isRealtime,
     isChartSocketConnected: connectionState === 'connected',
     isChartSocketConnecting: connectionState === 'connecting',
     isChartSocketDisconnected: connectionState === 'disconnected',
