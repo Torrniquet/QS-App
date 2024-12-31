@@ -7,7 +7,7 @@ export const timeframeConfig = {
   '1Y': { label: '1 Year', interval: 'day' },
 } as const
 
-export const getTimeFormatter = (timeframe: string) => (tick: number) => {
+export const getTimeFormatter = (timeframe: Timeframe) => (tick: number) => {
   if (typeof tick !== 'number') return '---'
 
   switch (timeframe) {
