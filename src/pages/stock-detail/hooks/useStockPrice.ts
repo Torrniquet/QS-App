@@ -1,10 +1,16 @@
 import { useQuery } from '@tanstack/react-query'
-import { useRef, useState, useEffect } from 'react'
-import { wsClient, rest } from '@/lib/api'
+import { useState, useEffect } from 'react'
+import { rest } from '@/lib/api'
 import { stockDetailKeys } from '@/lib/queryKeys'
-import { IMessageEvent, w3cwebsocket } from 'websocket'
 import { Timeframe } from '../timeframe'
 import { format } from 'date-fns'
+import {
+  ConnectionState,
+  polygonWS,
+  priceDataWebSocketMessageSchema,
+  Subscription,
+  WebSocketMessage,
+} from '@/lib/websocket'
 
 export type Trade = {
   price: number
@@ -24,24 +30,6 @@ export type PriceData = {
   dayOpen: number
 }
 
-// I don't wanna do this
-// But the SDK sucks
-type WebSocketMessage = {
-  ev: 'T'
-  sym: string
-  p: number // price
-  s: number // size
-  t: number // timestamp
-  c: number[] // conditions
-}
-
-type WebSocketAction = {
-  action: 'subscribe'
-  params: `T.${string}`
-}
-
-type ConnectionState = 'connecting' | 'connected' | 'disconnected'
-
 export function useStockPrice({
   symbol,
   timeframe,
@@ -49,8 +37,6 @@ export function useStockPrice({
   symbol: string | undefined
   timeframe: Timeframe
 }) {
-  const wsRef = useRef<w3cwebsocket | null>(null)
-  const reconnectAttempts = useRef(0)
   const [connectionState, setConnectionState] =
     useState<ConnectionState>('disconnected')
 
@@ -102,68 +88,50 @@ export function useStockPrice({
   }, [snapshot])
 
   const isRealtime = timeframe === '1D'
+  // Replace the entire WebSocket effect with:
   useEffect(() => {
     if (!symbol || !snapshot || !isRealtime) return
 
-    const connect = () => {
-      const ws = wsClient.stocks()
-      wsRef.current = ws
-      setConnectionState('connecting')
-      ws.onmessage = (event: IMessageEvent) => {
-        const messages = JSON.parse(event.data as string) as WebSocketMessage[]
+    const subscription: Subscription = `T.${symbol}`
 
-        messages.forEach((msg) => {
-          const isStockMessage = msg.ev === 'T' && msg.sym === symbol
+    // Handle connection state
+    polygonWS.addConnectionStateHandler(setConnectionState)
 
-          if (isStockMessage) {
-            setLiveData((prev) => {
-              if (!prev) return null
-              return {
-                ...prev,
-                price: msg.p,
-                volume: prev.volume + msg.s,
-                lastUpdate: msg.t,
-                trades: [
-                  {
-                    price: msg.p,
-                    size: msg.s,
-                    timestamp: msg.t,
-                    conditions: msg.c || [],
-                  },
-                  // Keep last 30 trades
-                  ...prev.trades.slice(0, 29),
-                ],
-              }
-            })
+    // Handle messages
+    const messageHandler = (messages: WebSocketMessage[]) => {
+      messages.forEach((msg) => {
+        // Since a specific subscription
+        // We can be sure that the message is a price data message
+        const parsedMsg = priceDataWebSocketMessageSchema.parse(msg)
+
+        setLiveData((prev) => {
+          if (!prev) return null
+          return {
+            ...prev,
+            price: parsedMsg.p,
+            volume: prev.volume + parsedMsg.s,
+            lastUpdate: parsedMsg.t,
+            trades: [
+              {
+                price: parsedMsg.p,
+                size: parsedMsg.s,
+                timestamp: parsedMsg.t,
+                conditions: parsedMsg.c || [],
+              },
+              ...prev.trades.slice(0, 29),
+            ],
           }
         })
-      }
-
-      ws.onopen = () => {
-        setConnectionState('connected')
-        const action: WebSocketAction = {
-          action: 'subscribe',
-          params: `T.${symbol}`,
-        }
-
-        console.log('stock price: connected to socket')
-
-        ws.send(JSON.stringify(action))
-        reconnectAttempts.current = 0
-      }
-
-      ws.onclose = () => {
-        setConnectionState('disconnected')
-        if (reconnectAttempts.current < 5) {
-          console.log('stock price: reconnecting socket...')
-          reconnectAttempts.current++
-          setTimeout(connect, 1000 * reconnectAttempts.current)
-        }
-      }
+      })
     }
 
-    connect()
-    return () => wsRef.current?.close()
+    polygonWS.addMessageHandler(subscription, messageHandler)
+    polygonWS.subscribe(subscription)
+
+    return () => {
+      polygonWS.removeMessageHandler(subscription, messageHandler)
+      polygonWS.unsubscribe(subscription)
+    }
   }, [symbol, snapshot, isRealtime])
 
   return {
