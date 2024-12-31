@@ -1,8 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { useState, useEffect } from 'react'
-import { rest } from '@/lib/api'
-import { Timeframe, getTimeframeConfig } from '../timeframe'
-import { z } from 'zod'
+import { Timeframe } from '@/lib/timeframe'
 import { stockDetailKeys } from '@/lib/queryKeys'
 import {
   chartDataWebSocketMessageSchema,
@@ -11,18 +9,8 @@ import {
   Subscription,
   WebSocketMessage,
 } from '@/lib/websocket'
-
-export const chartDataPointSchema = z.object({
-  c: z.number(),
-  h: z.number(),
-  l: z.number(),
-  o: z.number(),
-  v: z.number(),
-  t: z.number(),
-  vw: z.number().optional(),
-})
-
-export type ChartDataPoint = z.infer<typeof chartDataPointSchema>
+import { ChartDataPoint } from '@/lib/schemas'
+import { api } from '@/lib/api'
 
 const MAX_DATA_POINTS = 500 // Full trading day + some buffer
 
@@ -39,26 +27,7 @@ export function useChartData({
 
   const { data: historicalData, isLoading: isLoadingHistorical } = useQuery({
     queryKey: stockDetailKeys.chart(symbol as string, timeframe),
-    queryFn: async () => {
-      if (!symbol) throw new Error('Symbol is required')
-
-      const config = getTimeframeConfig(timeframe)
-      const response = await rest.stocks.aggregates(
-        symbol,
-        config.multiplier,
-        config.timespan,
-        config.from,
-        config.to
-      )
-
-      const parsedResults = z
-        .array(chartDataPointSchema)
-        .safeParse(response.results)
-
-      if (!parsedResults.success) throw new Error('Invalid data')
-
-      return parsedResults.data
-    },
+    queryFn: () => api.getChartData(symbol as string, timeframe),
     enabled: !!symbol,
   })
 

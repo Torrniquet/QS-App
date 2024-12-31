@@ -1,6 +1,6 @@
 import { useChartData } from '../hooks/useChartData'
 import { Skeleton } from '@/components/ui/skeleton'
-import { useTimeframe } from '../hooks/useTimeframe'
+import { useTimeframe } from '@/hooks/use-timeframe'
 import {
   LineChart,
   Line,
@@ -11,7 +11,7 @@ import {
   CartesianGrid,
 } from 'recharts'
 import { useQueryClient } from '@tanstack/react-query'
-import { TIMEFRAME_KEY } from '@/lib/queryKeys'
+import { stockDetailKeys, TIMEFRAME_KEY } from '@/lib/queryKeys'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
@@ -19,9 +19,10 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from '@/components/ui/chart'
-import { getTimeFormatter, Timeframe, timeframeConfig } from '../timeframe'
+import { getTimeFormatter, Timeframe, timeframeConfig } from '@/lib/timeframe'
 import { priceChartConfig } from '../constants'
 import { NUMBER_SCALES, NUMBER_SUFFIXES } from '@/lib/constants'
+import { api } from '@/lib/api'
 
 function formatVolume(value: number) {
   const { MILLION, THOUSAND } = NUMBER_SCALES
@@ -75,6 +76,30 @@ export function PriceChart({ symbol }: { symbol: string | undefined }) {
     return <PriceChartSkeleton />
   }
 
+  function prefetchStockDetail() {
+    if (!symbol) return
+
+    void queryClient.prefetchQuery({
+      queryKey: stockDetailKeys.chart(symbol, timeframe),
+      queryFn: () => api.getChartData(symbol, timeframe),
+    })
+
+    void queryClient.prefetchQuery({
+      queryKey: stockDetailKeys.technicals.macd(symbol, timeframe),
+      queryFn: () => api.getMACDData(symbol, timeframe),
+    })
+
+    void queryClient.prefetchQuery({
+      queryKey: stockDetailKeys.technicals.sma(symbol, timeframe),
+      queryFn: () => api.getSMAData(symbol, timeframe),
+    })
+
+    void queryClient.prefetchQuery({
+      queryKey: stockDetailKeys.technicals.rsi(symbol, timeframe),
+      queryFn: () => api.getRSIData(symbol, timeframe),
+    })
+  }
+
   return (
     <Card className="w-full">
       <CardHeader>
@@ -84,7 +109,11 @@ export function PriceChart({ symbol }: { symbol: string | undefined }) {
         >
           <TabsList>
             {Object.entries(timeframeConfig).map(([key, { label }]) => (
-              <TabsTrigger key={key} value={key}>
+              <TabsTrigger
+                key={key}
+                value={key}
+                onMouseEnter={prefetchStockDetail}
+              >
                 {label}
               </TabsTrigger>
             ))}

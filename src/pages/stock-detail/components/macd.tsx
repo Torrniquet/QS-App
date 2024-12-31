@@ -1,7 +1,7 @@
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useMACD } from '../hooks/useMACD'
-import { useTimeframe } from '../hooks/useTimeframe'
+import { useTimeframe } from '@/hooks/use-timeframe'
 import { technicalChartConfig } from '../constants'
 import {
   ChartContainer,
@@ -18,7 +18,7 @@ import {
   CartesianGrid,
   Cell,
 } from 'recharts'
-import { getTimeFormatter } from '../timeframe'
+import { getTimeFormatter } from '@/lib/timeframe'
 
 function MACDSkeleton() {
   return (

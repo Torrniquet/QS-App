@@ -1,9 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { useState, useEffect } from 'react'
-import { rest } from '@/lib/api'
 import { stockDetailKeys } from '@/lib/queryKeys'
-import { Timeframe } from '../timeframe'
-import { format } from 'date-fns'
+import { Timeframe } from '@/lib/timeframe'
 import {
   ConnectionState,
   polygonWS,
@@ -11,24 +9,8 @@ import {
   Subscription,
   WebSocketMessage,
 } from '@/lib/websocket'
-
-export type Trade = {
-  price: number
-  size: number
-  timestamp: number
-  conditions: number[]
-}
-
-export type PriceData = {
-  price: number
-  change: number
-  changePercent: number
-  volume: number
-  lastUpdate: number
-  trades: Trade[]
-  previousClose: number
-  dayOpen: number
-}
+import { PriceData } from '@/lib/schemas'
+import { api } from '@/lib/api'
 
 export function useStockPrice({
   symbol,
@@ -43,41 +25,7 @@ export function useStockPrice({
   // Get initial snapshot
   const { data: snapshot, isLoading } = useQuery({
     queryKey: stockDetailKeys.price(symbol as string),
-    queryFn: async () => {
-      const todayFormatted = format(new Date(), 'yyyy-MM-dd')
-
-      const [snapshotResponse, tradesResponse] = await Promise.all([
-        rest.stocks.snapshotTicker(symbol as string),
-        rest.stocks.trades(symbol as string, {
-          limit: 30,
-          timestamp: todayFormatted,
-        }),
-      ])
-
-      const ticker = snapshotResponse.ticker
-      if (!ticker?.lastTrade?.p || !ticker?.prevDay?.c)
-        throw new Error('No data')
-
-      const changeInDecimals =
-        (ticker.lastTrade.p - ticker.prevDay.c) / ticker.prevDay.c
-
-      return {
-        price: ticker.lastTrade.p,
-        change: ticker.lastTrade.p - ticker.prevDay.c,
-        changePercent: changeInDecimals * 100,
-        volume: ticker.day?.v || 0,
-        lastUpdate: ticker.lastTrade.t || 0,
-        previousClose: ticker.prevDay.c,
-        dayOpen: ticker.day?.o || ticker.prevDay.c,
-        trades:
-          tradesResponse.results?.map((trade) => ({
-            price: trade.price,
-            size: trade.size,
-            timestamp: trade.participant_timestamp,
-            conditions: trade.conditions || [],
-          })) || [],
-      } satisfies PriceData
-    },
+    queryFn: () => api.getPriceData(symbol as string),
     enabled: !!symbol,
   })
 

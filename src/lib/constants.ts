@@ -34,3 +34,5 @@ export const NUMBER_SUFFIXES = {
   MILLION: 'M',
   THOUSAND: 'K',
 } as const
+
+export const TECHNICAL_INDICATOR_DATA_LIMIT = 200

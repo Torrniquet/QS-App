@@ -13,10 +13,10 @@ import {
   ReferenceLine,
   CartesianGrid,
 } from 'recharts'
-import { useTimeframe } from '../hooks/useTimeframe'
+import { useTimeframe } from '@/hooks/use-timeframe'
 import { Skeleton } from '@/components/ui/skeleton'
 import { technicalChartConfig } from '../constants'
-import { getTimeFormatter } from '../timeframe'
+import { getTimeFormatter } from '@/lib/timeframe'
 
 const RSI_THRESHOLDS = {
   overbought: 70,

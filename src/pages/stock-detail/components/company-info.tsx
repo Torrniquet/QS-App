@@ -1,5 +1,5 @@
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
-import { TickerDetail } from '../hooks/useTickerDetail'
+import { TickerDetail } from '@/lib/schemas'
 import { cn } from '@/lib/utils'
 import { Skeleton } from '@/components/ui/skeleton'
 import { NUMBER_SCALES, NUMBER_SUFFIXES } from '@/lib/constants'

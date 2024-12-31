@@ -6,10 +6,10 @@ import {
   ChartTooltipContent,
 } from '@/components/ui/chart'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid } from 'recharts'
-import { useTimeframe } from '../hooks/useTimeframe'
+import { useTimeframe } from '@/hooks/use-timeframe'
 import { useSMA } from '../hooks/useSMA'
 import { technicalChartConfig } from '../constants'
-import { getTimeFormatter } from '../timeframe'
+import { getTimeFormatter } from '@/lib/timeframe'
 
 function SMASkeleton() {
   return (

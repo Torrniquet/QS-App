@@ -1,4 +1,4 @@
-import { rest } from '@/lib/api'
+import { rest } from '@/lib/sdk'
 import { BASE_STOCK_FILTERS } from '@/lib/constants'
 import { snapshotKeys, stockKeys } from '@/lib/queryKeys'
 import { useQuery } from '@tanstack/react-query'

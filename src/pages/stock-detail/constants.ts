@@ -30,5 +30,3 @@ export const technicalChartConfig = {
     color: 'hsl(var(--chart-5))',
   },
 } satisfies ChartConfig
-
-export const TECHNICAL_INDICATOR_DATA_LIMIT = 200

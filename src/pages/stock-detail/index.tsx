@@ -1,7 +1,7 @@
 import { useParams } from 'react-router'
 import { useTickerDetail } from './hooks/useTickerDetail'
 import { useStockPrice } from './hooks/useStockPrice'
-import { useTimeframe } from './hooks/useTimeframe'
+import { useTimeframe } from '@/hooks/use-timeframe'
 import { RSI } from './components/rsi'
 import { MACD } from './components/macd'
 import { StockHeader, StockHeaderSkeleton } from './components/stock-header'

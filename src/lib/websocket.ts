@@ -1,5 +1,5 @@
 // lib/websocket.ts
-import { wsClient } from '@/lib/api'
+import { wsClient } from '@/lib/sdk'
 import { w3cwebsocket } from 'websocket'
 import { z } from 'zod'
 import { env } from './env'

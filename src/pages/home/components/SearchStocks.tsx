@@ -3,7 +3,7 @@ import { StockCardSkeletonList } from './StockCardSkeletonList'
 import { useSearchParams } from 'react-router'
 import { useRef, useCallback, useEffect } from 'react'
 import { QUERY_PARAMS } from '@/lib/constants'
-import { StockFilters } from '@/lib/types'
+import { StockFilters } from '@/lib/schemas'
 import { StockCard } from './StockCard'
 
 export function SearchStocks() {

@@ -1,4 +1,4 @@
-import { Stock } from '@/lib/types'
+import { Stock } from '@/lib/schemas'
 import { ISnapshot } from '@polygon.io/client-js'
 
 type Snapshot = ISnapshot['ticker']

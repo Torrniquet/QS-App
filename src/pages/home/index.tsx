@@ -1,5 +1,5 @@
 import { useSearchParams } from 'react-router'
-import { StockFilters } from '@/lib/types'
+import { StockFilters } from '@/lib/schemas'
 import { useSearchStocks } from './hooks/useSearchStocks'
 import { PopularStocks } from './components/PopularStocks'
 import { SearchStocks } from './components/SearchStocks'

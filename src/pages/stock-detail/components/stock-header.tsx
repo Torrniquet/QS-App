@@ -1,7 +1,6 @@
 import { cn } from '@/lib/utils'
 import { ArrowUpIcon, ArrowDownIcon } from 'lucide-react'
-import { PriceData } from '../hooks/useStockPrice'
-import { TickerDetail } from '../hooks/useTickerDetail'
+import { PriceData, TickerDetail } from '@/lib/schemas'
 import { Skeleton } from '@/components/ui/skeleton'
 
 export function StockHeaderSkeleton() {

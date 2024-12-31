@@ -1,8 +1,8 @@
-import { PriceData } from '../hooks/useStockPrice'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Badge } from '@/components/ui/badge'
+import { PriceData } from '@/lib/schemas'
 
 // Mapping for trade conditions
 // More actually exist

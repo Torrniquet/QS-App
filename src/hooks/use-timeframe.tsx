@@ -1,6 +1,6 @@
 import { TIMEFRAME_KEY } from '@/lib/queryKeys'
 import { useQuery } from '@tanstack/react-query'
-import { Timeframe } from '../timeframe'
+import { Timeframe } from '@/lib/timeframe'
 
 /**
  * This is a global store for the timeframe.

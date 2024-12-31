@@ -1,4 +1,4 @@
-import { StockFilters } from './types'
+import { StockFilters } from './schemas'
 
 export const stockKeys = {
   all: ['stocks'] as const,
