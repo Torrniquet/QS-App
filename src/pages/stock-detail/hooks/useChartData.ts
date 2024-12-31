@@ -107,8 +107,6 @@ export function useChartData({
               vw: msg.vw,
             }
 
-            console.log('new data point', dataPoint)
-
             setRealtimeData((prev) => {
               const newData = [...prev, dataPoint].slice(-MAX_DATA_POINTS)
               return newData
@@ -123,6 +121,9 @@ export function useChartData({
           action: 'subscribe',
           params: `A.${symbol}`,
         }
+
+        console.log('chart data: connected to socket')
+
         ws.send(JSON.stringify(action))
         reconnectAttempts.current = 0
       }
@@ -130,7 +131,7 @@ export function useChartData({
       ws.onclose = () => {
         setConnectionState('disconnected')
         if (reconnectAttempts.current < 5) {
-          console.log('Reconnecting socket...')
+          console.log('chart data: reconnecting socket...')
           reconnectAttempts.current++
           setTimeout(connect, 1000 * reconnectAttempts.current)
         }

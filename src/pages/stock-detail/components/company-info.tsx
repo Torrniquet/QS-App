@@ -2,23 +2,22 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { TickerDetail } from '../hooks/useTickerDetail'
 import { cn } from '@/lib/utils'
 import { Skeleton } from '@/components/ui/skeleton'
+import { NUMBER_SCALES, NUMBER_SUFFIXES } from '@/lib/constants'
 
-function formatMarketCap(marketCap: number): string {
-  const trillion = 1e12
-  const billion = 1e9
-  const million = 1e6
+function formatMarketCap(value: number) {
+  const { TRILLION, BILLION, MILLION } = NUMBER_SCALES
+  const { TRILLION: T, BILLION: B, MILLION: M } = NUMBER_SUFFIXES
 
-  if (marketCap >= trillion) {
-    return `$${(marketCap / trillion).toFixed(2)}T`
+  if (value >= TRILLION) {
+    return `$${(value / TRILLION).toFixed(2)}${T}`
   }
-  if (marketCap >= billion) {
-    return `$${(marketCap / billion).toFixed(2)}B`
+  if (value >= BILLION) {
+    return `$${(value / BILLION).toFixed(2)}${B}`
   }
-  if (marketCap >= million) {
-    return `$${(marketCap / million).toFixed(2)}M`
+  if (value >= MILLION) {
+    return `$${(value / MILLION).toFixed(2)}${M}`
   }
-
-  return `$${marketCap.toFixed(2)}`
+  return `$${value.toFixed(2)}`
 }
 
 export function CompanyInfoSkeleton() {

@@ -21,6 +21,20 @@ import {
 } from '@/components/ui/chart'
 import { getTimeFormatter, Timeframe, timeframeConfig } from '../timeframe'
 import { priceChartConfig } from '../constants'
+import { NUMBER_SCALES, NUMBER_SUFFIXES } from '@/lib/constants'
+
+function formatVolume(value: number) {
+  const { MILLION, THOUSAND } = NUMBER_SCALES
+  const { MILLION: M, THOUSAND: K } = NUMBER_SUFFIXES
+
+  if (value >= MILLION) {
+    return `$${(value / MILLION).toFixed(2)}${M}`
+  }
+  if (value >= THOUSAND) {
+    return `$${(value / THOUSAND).toFixed(2)}${K}`
+  }
+  return `$${value.toLocaleString()}`
+}
 
 function PriceChartSkeleton() {
   return (
@@ -87,7 +101,13 @@ export function PriceChart({ symbol }: { symbol: string | undefined }) {
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="t" tickFormatter={getTimeFormatter(timeframe)} />
               <YAxis domain={['auto', 'auto']} />
-              <ChartTooltip content={<ChartTooltipContent />} />
+              <ChartTooltip
+                content={
+                  <ChartTooltipContent
+                    valueFormatter={(value) => `$${value.toLocaleString()}`}
+                  />
+                }
+              />
               <Line
                 type="monotone"
                 dataKey="c"
@@ -104,7 +124,17 @@ export function PriceChart({ symbol }: { symbol: string | undefined }) {
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="t" tickFormatter={getTimeFormatter(timeframe)} />
               <YAxis />
-              <ChartTooltip content={<ChartTooltipContent />} />
+              <ChartTooltip
+                content={
+                  <ChartTooltipContent
+                    valueFormatter={(value) =>
+                      typeof value === 'number'
+                        ? formatVolume(value)
+                        : value.toLocaleString()
+                    }
+                  />
+                }
+              />
               <Bar dataKey="v" fill="var(--color-v)" opacity={0.5} />
             </BarChart>
           </ChartContainer>

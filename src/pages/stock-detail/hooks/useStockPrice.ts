@@ -145,6 +145,9 @@ export function useStockPrice({
           action: 'subscribe',
           params: `T.${symbol}`,
         }
+
+        console.log('stock price: connected to socket')
+
         ws.send(JSON.stringify(action))
         reconnectAttempts.current = 0
       }
@@ -152,7 +155,7 @@ export function useStockPrice({
       ws.onclose = () => {
         setConnectionState('disconnected')
         if (reconnectAttempts.current < 5) {
-          console.log('Reconnecting socket...')
+          console.log('stock price: reconnecting socket...')
           reconnectAttempts.current++
           setTimeout(connect, 1000 * reconnectAttempts.current)
         }
