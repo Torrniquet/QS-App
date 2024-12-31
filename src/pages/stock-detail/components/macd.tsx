@@ -20,41 +20,55 @@ import {
 } from 'recharts'
 import { getTimeFormatter } from '@/lib/timeframe'
 
-function MACDSkeleton() {
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-baseline justify-between">
-          <span>MACD</span>
-          <Skeleton className="h-4 w-32" />
-        </CardTitle>
-        <Skeleton className="mt-1 h-4 w-3/4" />
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-3">
-          <Skeleton className="h-[200px] w-full" />
-          {/* Axis ticks */}
-          <div className="flex justify-between px-2">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <Skeleton key={i} className="h-4 w-16" />
-            ))}
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  )
-}
-
 export function MACD({ symbol }: { symbol: string | undefined }) {
   const timeframe = useTimeframe()
 
-  const { data: macdData, isLoading: isLoadingMACD } = useMACD({
+  const { data, isLoading, isError } = useMACD({
     symbol,
     timeframe,
   })
 
-  if (isLoadingMACD) {
-    return <MACDSkeleton />
+  if (isError) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-baseline justify-between">
+            <span>MACD</span>
+            <span className="text-sm font-normal text-muted-foreground">
+              Momentum Indicator
+            </span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-destructive">Failed to load MACD data</p>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  if (isLoading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-baseline justify-between">
+            <span>MACD</span>
+            <Skeleton className="h-4 w-32" />
+          </CardTitle>
+          <Skeleton className="mt-1 h-4 w-3/4" />
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            <Skeleton className="h-[200px] w-full" />
+            {/* Axis ticks */}
+            <div className="flex justify-between px-2">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <Skeleton key={i} className="h-4 w-16" />
+              ))}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    )
   }
 
   return (
@@ -73,7 +87,7 @@ export function MACD({ symbol }: { symbol: string | undefined }) {
       </CardHeader>
       <CardContent>
         <ChartContainer config={technicalChartConfig}>
-          <ComposedChart data={macdData}>
+          <ComposedChart data={data}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis
               dataKey="timestamp"
@@ -89,7 +103,7 @@ export function MACD({ symbol }: { symbol: string | undefined }) {
               opacity={0.6}
               fill="hsl(var(--accent))"
             >
-              {macdData?.map((entry, index) => (
+              {data?.map((entry, index) => (
                 <Cell
                   key={`cell-${index}`}
                   fill={

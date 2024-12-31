@@ -23,38 +23,47 @@ const RSI_THRESHOLDS = {
   oversold: 30,
 }
 
-function RSISkeleton() {
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>RSI</CardTitle>
-      </CardHeader>
-      <CardContent>
-        {/* Chart area skeleton */}
-        <div className="space-y-3">
-          <Skeleton className="h-[200px] w-full" />
-          {/* Axis ticks */}
-          <div className="flex justify-between px-2">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <Skeleton key={i} className="h-4 w-16" />
-            ))}
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  )
-}
-
 export function RSI({ symbol }: { symbol: string | undefined }) {
   const timeframe = useTimeframe()
 
-  const { data: rsiData, isLoading: isLoadingRSI } = useRSI({
+  const { data, isLoading, isError } = useRSI({
     symbol,
     timeframe,
   })
 
-  if (isLoadingRSI) {
-    return <RSISkeleton />
+  if (isError) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>RSI</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-destructive">Failed to load RSI data</p>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  if (isLoading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>RSI</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {/* Chart area skeleton */}
+          <div className="space-y-3">
+            <Skeleton className="h-[200px] w-full" />
+            {/* Axis ticks */}
+            <div className="flex justify-between px-2">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <Skeleton key={i} className="h-4 w-16" />
+              ))}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    )
   }
 
   return (
@@ -64,7 +73,7 @@ export function RSI({ symbol }: { symbol: string | undefined }) {
       </CardHeader>
       <CardContent>
         <ChartContainer config={technicalChartConfig}>
-          <LineChart data={rsiData}>
+          <LineChart data={data}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis
               dataKey="timestamp"
