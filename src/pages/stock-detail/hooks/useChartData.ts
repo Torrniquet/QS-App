@@ -87,9 +87,7 @@ export function useChartData({
     chartData: isRealtime ? realtimeData : historicalData,
     isInitialChartDataLoading: isRealtime ? false : isLoadingHistorical,
     isChartRealtime: isRealtime,
-    isChartSocketConnected: connectionState === 'connected',
-    isChartSocketConnecting: connectionState === 'connecting',
-    isChartSocketDisconnected: connectionState === 'disconnected',
+    chartConnectionState: connectionState,
     isChartDataError: isError,
     chartDataError: error,
   }

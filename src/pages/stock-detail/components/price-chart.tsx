@@ -23,6 +23,15 @@ import { getTimeFormatter, Timeframe, timeframeConfig } from '@/lib/timeframe'
 import { priceChartConfig } from '../constants'
 import { NUMBER_SCALES, NUMBER_SUFFIXES } from '@/lib/constants'
 import { api } from '@/lib/api'
+import { ConnectionState } from '@/lib/websocket'
+import { cn } from '@/lib/utils'
+
+const CONNECTION_STATE_LABEL_MAP: Record<ConnectionState, string> = {
+  connected: 'Connected',
+  authenticated: 'Connected',
+  connecting: 'Connecting',
+  disconnected: 'Disconnected',
+}
 
 function formatVolume(value: number) {
   const { MILLION, THOUSAND } = NUMBER_SCALES
@@ -40,11 +49,16 @@ function formatVolume(value: number) {
 export function PriceChart({ symbol }: { symbol: string | undefined }) {
   const timeframe = useTimeframe()
 
-  const { chartData, isInitialChartDataLoading, isChartDataError } =
-    useChartData({
-      symbol,
-      timeframe,
-    })
+  const {
+    chartData,
+    isInitialChartDataLoading,
+    isChartDataError,
+    chartConnectionState,
+    isChartRealtime,
+  } = useChartData({
+    symbol,
+    timeframe,
+  })
 
   const queryClient = useQueryClient()
 
@@ -128,7 +142,11 @@ export function PriceChart({ symbol }: { symbol: string | undefined }) {
 
   return (
     <Card className="w-full">
-      <CardHeader>
+      <CardHeader
+        className={cn('flex flex-row items-center', {
+          'justify-between': isChartRealtime,
+        })}
+      >
         <Tabs
           value={timeframe}
           onValueChange={(value) => updateTimeframe(value as Timeframe)}
@@ -145,6 +163,28 @@ export function PriceChart({ symbol }: { symbol: string | undefined }) {
             ))}
           </TabsList>
         </Tabs>
+        {isChartRealtime && (
+          <div
+            className="flex items-center gap-1.5 rounded-lg border p-2"
+            // Needed to override card header inner styles
+            style={{
+              marginTop: 0,
+            }}
+          >
+            <div
+              className={cn('size-3 rounded-full', {
+                'bg-green-500':
+                  chartConnectionState === 'connected' ||
+                  chartConnectionState === 'authenticated',
+                'bg-yellow-500': chartConnectionState === 'connecting',
+                'bg-red-500': chartConnectionState === 'disconnected',
+              })}
+            />
+            <p className="text-xs font-bold">
+              {CONNECTION_STATE_LABEL_MAP[chartConnectionState]}
+            </p>
+          </div>
+        )}
       </CardHeader>
       <CardContent>
         <div className="h-[400px]">
