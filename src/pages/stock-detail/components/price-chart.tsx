@@ -99,7 +99,11 @@ export function PriceChart({ symbol }: { symbol: string | undefined }) {
           >
             <LineChart data={chartData}>
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="t" tickFormatter={getTimeFormatter(timeframe)} />
+              <XAxis
+                dataKey="t"
+                minTickGap={25}
+                tickFormatter={getTimeFormatter(timeframe)}
+              />
               <YAxis domain={['auto', 'auto']} />
               <ChartTooltip
                 content={
@@ -122,7 +126,11 @@ export function PriceChart({ symbol }: { symbol: string | undefined }) {
           <ChartContainer config={priceChartConfig} className="h-full w-full">
             <BarChart data={chartData}>
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="t" tickFormatter={getTimeFormatter(timeframe)} />
+              <XAxis
+                dataKey="t"
+                minTickGap={25}
+                tickFormatter={getTimeFormatter(timeframe)}
+              />
               <YAxis />
               <ChartTooltip
                 content={
