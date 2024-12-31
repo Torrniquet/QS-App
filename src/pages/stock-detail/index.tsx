@@ -37,7 +37,7 @@ export function StockDetailPage() {
 
       <PriceChart symbol={symbol} />
 
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 2xl:grid-cols-3">
         {isPriceDataLoading || !priceData ? (
           <RecentTradesSkeleton />
         ) : (
