@@ -23,7 +23,12 @@ export function useStockPrice({
     useState<ConnectionState>('disconnected')
 
   // Get initial snapshot
-  const { data: snapshot, isLoading } = useQuery({
+  const {
+    data: snapshot,
+    isLoading,
+    isError,
+    error,
+  } = useQuery({
     queryKey: stockDetailKeys.price(symbol as string),
     queryFn: () => api.getPriceData(symbol as string),
     enabled: !!symbol,
@@ -88,5 +93,7 @@ export function useStockPrice({
     isTradeSocketConnected: connectionState === 'connected',
     isTradeSocketConnecting: connectionState === 'connecting',
     isTradeSocketDisconnected: connectionState === 'disconnected',
+    isPriceDataError: isError,
+    priceDataError: error,
   }
 }

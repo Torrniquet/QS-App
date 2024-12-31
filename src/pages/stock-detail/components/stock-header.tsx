@@ -3,28 +3,42 @@ import { ArrowUpIcon, ArrowDownIcon } from 'lucide-react'
 import { PriceData, TickerDetail } from '@/lib/schemas'
 import { Skeleton } from '@/components/ui/skeleton'
 
-export function StockHeaderSkeleton() {
-  return (
-    <div className="flex items-start justify-between">
-      <div>
-        <Skeleton className="mb-2 h-10 w-32" /> {/* Ticker */}
-        <Skeleton className="h-7 w-48" /> {/* Company name */}
-      </div>
-      <div className="text-right">
-        <Skeleton className="mb-2 ml-auto h-9 w-32" /> {/* Price */}
-        <Skeleton className="ml-auto h-7 w-24" /> {/* Change */}
-      </div>
-    </div>
-  )
-}
-
 export function StockHeader({
   priceData,
   tickerDetail,
+  isLoading,
+  isError,
 }: {
-  priceData: PriceData
-  tickerDetail: TickerDetail
+  priceData: PriceData | null
+  tickerDetail: TickerDetail | null
+  isLoading: boolean
+  isError: boolean
 }) {
+  if (isError) {
+    return (
+      <div className="flex items-start justify-between">
+        <div>
+          <p className="text-sm text-destructive">Failed to load stock data</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (isLoading || !priceData || !tickerDetail) {
+    return (
+      <div className="flex items-start justify-between">
+        <div>
+          <Skeleton className="mb-2 h-10 w-32" /> {/* Ticker */}
+          <Skeleton className="h-7 w-48" /> {/* Company name */}
+        </div>
+        <div className="text-right">
+          <Skeleton className="mb-2 ml-auto h-9 w-32" /> {/* Price */}
+          <Skeleton className="ml-auto h-7 w-24" /> {/* Change */}
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="flex items-start justify-between">
       <div>

@@ -25,7 +25,12 @@ export function useChartData({
     useState<ConnectionState>('disconnected')
   const [realtimeData, setRealtimeData] = useState<ChartDataPoint[]>([])
 
-  const { data: historicalData, isLoading: isLoadingHistorical } = useQuery({
+  const {
+    data: historicalData,
+    isLoading: isLoadingHistorical,
+    isError,
+    error,
+  } = useQuery({
     queryKey: stockDetailKeys.chart(symbol as string, timeframe),
     queryFn: () => api.getChartData(symbol as string, timeframe),
     enabled: !!symbol,
@@ -85,5 +90,7 @@ export function useChartData({
     isChartSocketConnected: connectionState === 'connected',
     isChartSocketConnecting: connectionState === 'connecting',
     isChartSocketDisconnected: connectionState === 'disconnected',
+    isChartDataError: isError,
+    chartDataError: error,
   }
 }

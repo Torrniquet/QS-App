@@ -37,43 +37,19 @@ function formatVolume(value: number) {
   return `$${value.toLocaleString()}`
 }
 
-function PriceChartSkeleton() {
-  return (
-    <Card className="w-full">
-      <CardHeader>
-        <Skeleton className="h-10 w-[300px]" /> {/* Tabs area */}
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-6">
-          {/* Price chart skeleton */}
-          <div className="h-[400px]">
-            <Skeleton className="h-full w-full" />
-          </div>
-          {/* Volume chart skeleton */}
-          <div className="h-[200px]">
-            <Skeleton className="h-full w-full" />
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  )
-}
-
 export function PriceChart({ symbol }: { symbol: string | undefined }) {
   const timeframe = useTimeframe()
 
-  const { chartData, isInitialChartDataLoading } = useChartData({
-    symbol,
-    timeframe,
-  })
+  const { chartData, isInitialChartDataLoading, isChartDataError } =
+    useChartData({
+      symbol,
+      timeframe,
+    })
 
   const queryClient = useQueryClient()
+
   const updateTimeframe = (timeframe: Timeframe) => {
     queryClient.setQueryData(TIMEFRAME_KEY, timeframe)
-  }
-
-  if (isInitialChartDataLoading || !chartData) {
-    return <PriceChartSkeleton />
   }
 
   function prefetchStockDetail() {
@@ -98,6 +74,56 @@ export function PriceChart({ symbol }: { symbol: string | undefined }) {
       queryKey: stockDetailKeys.technicals.rsi(symbol, timeframe),
       queryFn: () => api.getRSIData(symbol, timeframe),
     })
+  }
+
+  if (isChartDataError) {
+    return (
+      <Card className="w-full">
+        <CardHeader>
+          <Tabs
+            value={timeframe}
+            onValueChange={(value) => updateTimeframe(value as Timeframe)}
+          >
+            <TabsList>
+              {Object.entries(timeframeConfig).map(([key, { label }]) => (
+                <TabsTrigger
+                  key={key}
+                  value={key}
+                  onMouseEnter={prefetchStockDetail}
+                >
+                  {label}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </Tabs>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-destructive">Failed to load chart data</p>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  if (isInitialChartDataLoading || !chartData) {
+    return (
+      <Card className="w-full">
+        <CardHeader>
+          <Skeleton className="h-10 w-[300px]" /> {/* Tabs area */}
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-6">
+            {/* Price chart skeleton */}
+            <div className="h-[400px]">
+              <Skeleton className="h-full w-full" />
+            </div>
+            {/* Volume chart skeleton */}
+            <div className="h-[200px]">
+              <Skeleton className="h-full w-full" />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    )
   }
 
   return (
