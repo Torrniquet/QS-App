@@ -1,4 +1,3 @@
-// lib/websocket.ts
 import { wsClient } from '@/lib/sdk'
 import { w3cwebsocket } from 'websocket'
 import { z } from 'zod'

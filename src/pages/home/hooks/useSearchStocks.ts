@@ -1,14 +1,14 @@
 import { rest } from '@/lib/sdk'
 import { BASE_STOCK_FILTERS } from '@/lib/constants'
-import { stockKeys } from '@/lib/queryKeys'
+import { tickerKeys } from '@/lib/queryKeys'
 import { StockFilters } from '@/lib/schemas'
 import { useInfiniteQuery } from '@tanstack/react-query'
-import { createLookupMap, transformStockData } from '../utils'
 import { ITickersQuery } from '@polygon.io/client-js'
+import { createStockLookupMap, transformStockData } from '@/lib/utils'
 
 export function useSearchStocks(filters: StockFilters) {
   return useInfiniteQuery({
-    queryKey: stockKeys.filtered(filters),
+    queryKey: tickerKeys.filtered(filters),
     queryFn: async ({ pageParam }) => {
       const tickersResponse = await rest.reference.tickers({
         ...BASE_STOCK_FILTERS,
@@ -31,12 +31,12 @@ export function useSearchStocks(filters: StockFilters) {
         tickers: tickers.join(','),
       })
 
-      const snapshotMap = createLookupMap({
+      const snapshotMap = createStockLookupMap({
         items: snapshotsResponse.tickers || [],
         getKey: (snapshot) => snapshot.ticker!,
       })
 
-      const tickerDetailsMap = createLookupMap({
+      const tickerDetailsMap = createStockLookupMap({
         items: tickersResponse.results,
         getKey: (ticker) => ticker.ticker,
       })

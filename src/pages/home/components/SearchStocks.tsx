@@ -1,10 +1,10 @@
 import { useSearchStocks } from '../hooks/useSearchStocks'
-import { StockCardSkeletonList } from './StockCardSkeletonList'
+import { StockCardSkeletonList } from '@/components/StockCardSkeletonList'
 import { useSearchParams } from 'react-router'
 import { useRef, useCallback, useEffect } from 'react'
 import { QUERY_PARAMS } from '@/lib/constants'
 import { StockFilters } from '@/lib/schemas'
-import { StockCard } from './StockCard'
+import { StockCard } from '@/components/StockCard'
 
 export function SearchStocks() {
   const [searchParams] = useSearchParams()

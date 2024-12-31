@@ -1,7 +1,15 @@
 import { cn } from '@/lib/utils'
-import { ArrowUpIcon, ArrowDownIcon } from 'lucide-react'
+import {
+  ArrowUpIcon,
+  ArrowDownIcon,
+  BookmarkCheckIcon,
+  BookmarkIcon,
+} from 'lucide-react'
 import { PriceData, TickerDetail } from '@/lib/schemas'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Button } from '@/components/ui/button'
+import { useEffect, useState } from 'react'
+import { getBookmarks, toggleBookmark } from '@/lib/bookmarks'
 
 export function StockHeader({
   priceData,
@@ -14,6 +22,14 @@ export function StockHeader({
   isLoading: boolean
   isError: boolean
 }) {
+  const [isBookmarked, setIsBookmarked] = useState(false)
+
+  useEffect(() => {
+    void getBookmarks().then((bookmarks) =>
+      setIsBookmarked(bookmarks.includes(tickerDetail?.ticker || ''))
+    )
+  }, [tickerDetail?.ticker])
+
   if (isError) {
     return (
       <div className="flex items-start justify-between">
@@ -39,29 +55,44 @@ export function StockHeader({
     )
   }
 
+  const handleBookmarkToggle = () => {
+    void toggleBookmark(tickerDetail.ticker).then((updatedBookmarks) => {
+      setIsBookmarked(updatedBookmarks.includes(tickerDetail.ticker))
+    })
+  }
+
   return (
     <div className="flex items-start justify-between">
       <div>
         <h1 className="text-4xl font-bold">{tickerDetail.ticker}</h1>
         <p className="text-xl text-muted-foreground">{tickerDetail.name}</p>
       </div>
-      <div className="text-right">
-        <p className="text-3xl font-bold">${priceData.price.toFixed(2)}</p>
-        <div
-          className={cn('flex items-center justify-end text-lg', {
-            'text-green-600': priceData.change >= 0,
-            'text-red-600': priceData.change < 0,
-          })}
+      <div className="flex gap-2 text-right">
+        <Button
+          variant="outline"
+          onClick={handleBookmarkToggle}
+          className="px-3"
         >
-          {priceData.change >= 0 ? (
-            <ArrowUpIcon className="h-5 w-5" />
-          ) : (
-            <ArrowDownIcon className="h-5 w-5" />
-          )}
-          <span>
-            {Math.abs(priceData.change).toFixed(2)} (
-            {Math.abs(priceData.changePercent).toFixed(2)}%)
-          </span>
+          {isBookmarked ? <BookmarkCheckIcon /> : <BookmarkIcon />}
+        </Button>
+        <div className="flex flex-col">
+          <p className="text-3xl font-bold">${priceData.price.toFixed(2)}</p>
+          <div
+            className={cn('flex items-center justify-end text-lg', {
+              'text-green-600': priceData.change >= 0,
+              'text-red-600': priceData.change < 0,
+            })}
+          >
+            {priceData.change >= 0 ? (
+              <ArrowUpIcon className="h-5 w-5" />
+            ) : (
+              <ArrowDownIcon className="h-5 w-5" />
+            )}
+            <span>
+              {Math.abs(priceData.change).toFixed(2)} (
+              {Math.abs(priceData.changePercent).toFixed(2)}%)
+            </span>
+          </div>
         </div>
       </div>
     </div>

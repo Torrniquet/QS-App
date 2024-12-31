@@ -11,7 +11,7 @@ import { SearchIcon } from 'lucide-react'
 import { useSearchParams } from 'react-router'
 import { useIsFetching } from '@tanstack/react-query'
 import { StockFilters } from '@/lib/schemas'
-import { stockKeys } from '@/lib/queryKeys'
+import { tickerKeys } from '@/lib/queryKeys'
 import { QUERY_PARAMS } from '@/lib/constants'
 
 const EXCHANGE_OPTIONS = [
@@ -48,7 +48,7 @@ export function SearchForm() {
   }
 
   const isFetchingSearchStocks =
-    useIsFetching({ queryKey: stockKeys.filtered(stockFilters) }) > 0
+    useIsFetching({ queryKey: tickerKeys.filtered(stockFilters) }) > 0
 
   function handleSearchSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()

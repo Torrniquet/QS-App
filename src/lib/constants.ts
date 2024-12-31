@@ -15,7 +15,7 @@ export const QUERY_PARAMS = {
 export const ROUTES = {
   HOME: '/',
   SEARCH: '/search',
-  WATCHLIST: '/watchlist',
+  BOOKMARKS: '/bookmarks',
   COMPARE: '/compare',
   STOCK_DETAIL: '/stocks/:symbol',
   NOT_FOUND: '*',

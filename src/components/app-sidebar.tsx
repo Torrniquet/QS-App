@@ -10,22 +10,23 @@ import {
   SidebarMenuItem,
 } from '@/components/ui/sidebar'
 import { Link } from 'react-router'
+import { ROUTES } from '@/lib/constants'
 
 const menuItems = [
   {
     title: 'Search',
     icon: Search,
-    url: '/search',
+    url: ROUTES.SEARCH,
   },
   {
-    title: 'Watchlist',
+    title: 'Bookmarks',
     icon: ListChecks,
-    url: '/watchlist',
+    url: ROUTES.BOOKMARKS,
   },
   {
     title: 'Compare',
     icon: GitCompare,
-    url: '/compare',
+    url: ROUTES.COMPARE,
   },
 ]
 

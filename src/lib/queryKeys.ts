@@ -1,20 +1,21 @@
 import { StockFilters } from './schemas'
 
-export const stockKeys = {
+export const tickerKeys = {
   all: ['stocks'] as const,
-  popular: () => [...stockKeys.all, 'popular-stocks'] as const,
-  filtered: (filters: StockFilters) => [...stockKeys.all, filters] as const,
+  popular: () => [...tickerKeys.all, 'popular-stocks'] as const,
+  filtered: (filters: StockFilters) => [...tickerKeys.all, filters] as const,
+  bookmarked: () => [...tickerKeys.all, 'bookmarked'] as const,
 }
 
 export const snapshotKeys = {
   all: ['snapshots'] as const,
   popular: () => [...snapshotKeys.all, 'popular-stocks'] as const,
+  bookmarked: () => [...snapshotKeys.all, 'bookmarked'] as const,
 }
 
 export const stockDetailKeys = {
   all: ['stock-detail'] as const,
   bySymbol: (symbol: string) => [...stockDetailKeys.all, symbol] as const,
-  // Now nest the specific data types under the symbol
   company: (symbol: string) =>
     [...stockDetailKeys.bySymbol(symbol), 'company'] as const,
   price: (symbol: string) =>
