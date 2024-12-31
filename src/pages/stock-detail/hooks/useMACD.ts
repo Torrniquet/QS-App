@@ -3,6 +3,7 @@ import { rest } from '@/lib/api'
 import { stockDetailKeys } from '@/lib/queryKeys'
 import { getTimeframeConfig, Timeframe } from '@/pages/stock-detail/timeframe'
 import { z } from 'zod'
+import { TECHNICAL_INDICATOR_DATA_LIMIT } from '../constants'
 
 const macdResultSchema = z.object({
   timestamp: z.number(),
@@ -31,11 +32,14 @@ export function useMACD({
       const config = getTimeframeConfig(timeframe)
       const response = await rest.stocks.macd(symbol, {
         timespan: config.timespan,
-        timestamp: config.from,
+        'timestamp.gte': config.from,
+        'timestamp.lte': config.to,
         short_window: STANDARD_SHORT_WINDOW,
         long_window: STANDARD_LONG_WINDOW,
         signal_window: STANDARD_SIGNAL_WINDOW,
         series_type: CLOSE_PRICE_SERIES_TYPE,
+        order: 'asc',
+        limit: TECHNICAL_INDICATOR_DATA_LIMIT,
       })
 
       if (!response.results) throw new Error('No MACD data')

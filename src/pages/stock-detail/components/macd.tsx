@@ -2,7 +2,6 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useMACD } from '../hooks/useMACD'
 import { useTimeframe } from '../hooks/useTimeframe'
-import { format } from 'date-fns'
 import { technicalChartConfig } from '../constants'
 import {
   ChartContainer,
@@ -19,6 +18,7 @@ import {
   CartesianGrid,
   Cell,
 } from 'recharts'
+import { getTimeFormatter } from '../timeframe'
 
 function MACDSkeleton() {
   return (
@@ -77,11 +77,9 @@ export function MACD({ symbol }: { symbol: string | undefined }) {
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis
               dataKey="timestamp"
-              tickFormatter={(tick) =>
-                typeof tick === 'number'
-                  ? format(new Date(tick), 'HH:mm:ss')
-                  : '---'
-              }
+              interval="preserveStartEnd"
+              minTickGap={50}
+              tickFormatter={getTimeFormatter(timeframe)}
             />
             <YAxis />
             <ReferenceLine y={0} stroke="hsl(var(--border))" />

@@ -14,9 +14,14 @@ import {
   CartesianGrid,
 } from 'recharts'
 import { useTimeframe } from '../hooks/useTimeframe'
-import { format } from 'date-fns'
 import { Skeleton } from '@/components/ui/skeleton'
 import { technicalChartConfig } from '../constants'
+import { getTimeFormatter } from '../timeframe'
+
+const RSI_THRESHOLDS = {
+  overbought: 70,
+  oversold: 30,
+}
 
 function RSISkeleton() {
   return (
@@ -63,18 +68,27 @@ export function RSI({ symbol }: { symbol: string | undefined }) {
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis
               dataKey="timestamp"
-              tickFormatter={(tick: number | string): string => {
-                const timestamp = Number(tick)
-                if (Number.isFinite(timestamp)) {
-                  const formatted = format(new Date(timestamp), 'HH:mm:ss')
-                  return String(formatted)
-                }
-                return '---'
-              }}
+              tickFormatter={getTimeFormatter(timeframe)}
+              interval="preserveStartEnd" // Show first and last tick always
+              minTickGap={50} // Minimum pixel space between ticks to avoid too much density
             />
-            <YAxis domain={[0, 100]} />
-            <ReferenceLine y={30} stroke="hsl(var(--destructive))" />
-            <ReferenceLine y={70} stroke="hsl(var(--destructive))" />
+            <YAxis
+              domain={[0, 100]}
+              ticks={[
+                0,
+                RSI_THRESHOLDS.oversold,
+                RSI_THRESHOLDS.overbought,
+                100,
+              ]}
+            />
+            <ReferenceLine
+              y={RSI_THRESHOLDS.oversold}
+              stroke="hsl(var(--destructive))"
+            />
+            <ReferenceLine
+              y={RSI_THRESHOLDS.overbought}
+              stroke="hsl(var(--destructive))"
+            />
             <Line
               type="monotone"
               dataKey="value"
@@ -82,7 +96,7 @@ export function RSI({ symbol }: { symbol: string | undefined }) {
               dot={false}
               strokeWidth={2}
             />
-            <ChartTooltip content={<ChartTooltipContent hideLabel />} />
+            <ChartTooltip content={<ChartTooltipContent />} />
           </LineChart>
         </ChartContainer>
       </CardContent>

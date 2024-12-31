@@ -1,6 +1,5 @@
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
-import { format } from 'date-fns'
 import {
   ChartContainer,
   ChartTooltip,
@@ -10,6 +9,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid } from 'recharts'
 import { useTimeframe } from '../hooks/useTimeframe'
 import { useSMA } from '../hooks/useSMA'
 import { technicalChartConfig } from '../constants'
+import { getTimeFormatter } from '../timeframe'
 
 function SMASkeleton() {
   return (
@@ -55,11 +55,9 @@ export function SMA({ symbol }: { symbol: string | undefined }) {
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis
               dataKey="timestamp"
-              tickFormatter={(tick) =>
-                typeof tick === 'number'
-                  ? format(new Date(tick), 'HH:mm:ss')
-                  : '---'
-              }
+              interval="preserveStartEnd"
+              minTickGap={50}
+              tickFormatter={getTimeFormatter(timeframe)}
             />
             <YAxis domain={['auto', 'auto']} />
             <Line
