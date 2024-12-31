@@ -1,10 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { rest } from '@/lib/api'
 import { stockDetailKeys } from '@/lib/queryKeys'
-import {
-  getTimeframeConfig,
-  Timeframe,
-} from '@/pages/stock-detail/utils/timeframe'
+import { getTimeframeConfig, Timeframe } from '@/pages/stock-detail/timeframe'
 import { z } from 'zod'
 
 const macdResultSchema = z.object({

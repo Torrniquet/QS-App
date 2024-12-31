@@ -3,7 +3,7 @@ import { useRef, useState, useEffect } from 'react'
 import { wsClient, rest } from '@/lib/api'
 import { stockDetailKeys } from '@/lib/queryKeys'
 import { IMessageEvent, w3cwebsocket } from 'websocket'
-import { Timeframe } from '../utils/timeframe'
+import { Timeframe } from '../timeframe'
 import { format } from 'date-fns'
 
 export type Trade = {

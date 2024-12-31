@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useState, useEffect, useRef } from 'react'
 import { IMessageEvent, w3cwebsocket } from 'websocket'
 import { rest, wsClient } from '@/lib/api'
-import { Timeframe, getTimeframeConfig } from '../utils/timeframe'
+import { Timeframe, getTimeframeConfig } from '../timeframe'
 import { z } from 'zod'
 import { stockDetailKeys } from '@/lib/queryKeys'
 

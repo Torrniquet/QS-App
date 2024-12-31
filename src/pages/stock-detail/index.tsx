@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { format } from 'date-fns'
 import {
   LineChart,
@@ -24,7 +23,7 @@ import { Badge } from '@/components/ui/badge'
 import { ArrowUpIcon, ArrowDownIcon } from 'lucide-react'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { cn } from '@/lib/utils'
-import { getTimeFormatter, Timeframe, timeframeConfig } from './utils/timeframe'
+import { getTimeFormatter, Timeframe, timeframeConfig } from './timeframe'
 import { useParams } from 'react-router'
 import { useCompanyInfo } from './hooks/useCompanyInfo'
 import { useStockPrice } from './hooks/useStockPrice'
@@ -32,6 +31,9 @@ import { useChartData } from './hooks/useChartData'
 import { useRSI } from './hooks/useRSI'
 import { useSMA } from './hooks/useSMA'
 import { useMACD } from './hooks/useMACD'
+import { useQueryClient } from '@tanstack/react-query'
+import { TIMEFRAME_KEY } from '@/lib/queryKeys'
+import { useTimeframe } from './hooks/useTimeframe'
 
 // Mapping for trade conditions
 // More actually exist
@@ -77,7 +79,8 @@ const technicalChartConfig = {
 
 export function StockDetailPage() {
   const { symbol } = useParams()
-  const [timeframe, setTimeframe] = useState<Timeframe>('1D')
+
+  const timeframe = useTimeframe()
 
   const { chartData, isInitialChartDataLoading } = useChartData({
     symbol,
@@ -106,6 +109,8 @@ export function StockDetailPage() {
     timeframe,
   })
 
+  const queryClient = useQueryClient()
+
   console.log({ smaData, macdData, rsiData })
 
   if (
@@ -121,7 +126,9 @@ export function StockDetailPage() {
   )
     return <div>Loading...</div>
 
-  console.log('chartData', chartData)
+  const updateTimeframe = (timeframe: Timeframe) => {
+    queryClient.setQueryData(TIMEFRAME_KEY, timeframe)
+  }
 
   return (
     <div className="container mx-auto flex flex-col gap-6 p-4">
@@ -157,7 +164,7 @@ export function StockDetailPage() {
         <CardHeader>
           <Tabs
             value={timeframe}
-            onValueChange={(value) => setTimeframe(value as Timeframe)}
+            onValueChange={(value) => updateTimeframe(value as Timeframe)}
           >
             <TabsList>
               {Object.entries(timeframeConfig).map(([key, { label }]) => (

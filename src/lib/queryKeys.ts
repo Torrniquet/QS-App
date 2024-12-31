@@ -45,3 +45,5 @@ export const stockDetailKeys = {
       ] as const,
   },
 }
+
+export const TIMEFRAME_KEY = ['timeframe'] as const
