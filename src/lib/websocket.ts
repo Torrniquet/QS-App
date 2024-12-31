@@ -45,6 +45,7 @@ const statusMessageSchema = z.object({
     z.literal('error'),
     z.literal('connected'),
     z.literal('success'),
+    z.literal('max_connections'),
   ]),
   message: z.string(),
 })
