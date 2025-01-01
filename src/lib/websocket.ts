@@ -122,6 +122,13 @@ export type ConnectionState =
   | 'disconnected'
   | 'authenticated'
 
+export const CONNECTION_STATE_LABEL_MAP: Record<ConnectionState, string> = {
+  connected: 'Connected',
+  authenticated: 'Connected',
+  connecting: 'Connecting',
+  disconnected: 'Disconnected',
+}
+
 class PolygonWebSocket<RawStringGeneric extends string> {
   private ws: w3cwebsocket | null = null
 

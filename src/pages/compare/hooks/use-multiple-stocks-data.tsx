@@ -87,8 +87,8 @@ export function useMultipleStockData({
 
   return {
     multipleStocksData: isRealtime ? realtimeData : historicalData,
-    isInitialMultipleStocksDataLoading: isLoadingHistorical,
     isMultipleStocksDataRealtime: isRealtime,
+    isInitialMultipleStocksDataLoading: isLoadingHistorical,
     multipleStocksDataConnectionState: connectionState,
     isMultipleStocksDataError: isError,
   }

@@ -17,6 +17,8 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { STOCK_LIMITS } from './constants'
 import { api } from '@/lib/api'
 import { MultipleStocksData } from '@/lib/schemas'
+import { ConnectionState } from '@/lib/websocket'
+import { ConnectionTag } from '@/components/connection-tag'
 
 const StockSearch = React.memo(function StockSearch({
   onStockAdd,
@@ -130,11 +132,15 @@ const StockChart = React.memo(function StockInnerChart({
   data,
   isLoading,
   isError,
+  connectionState,
+  isDataRealtime,
 }: {
   selectedStocks: Set<string>
   data: MultipleStocksData | undefined
   isLoading: boolean
   isError: boolean
+  connectionState: ConnectionState
+  isDataRealtime: boolean
 }) {
   const queryClient = useQueryClient()
   const timeframe = useTimeframe()
@@ -181,7 +187,11 @@ const StockChart = React.memo(function StockInnerChart({
 
   return (
     <Card>
-      <CardHeader>
+      <CardHeader
+        className={cn('flex flex-row items-center', {
+          'justify-between': isDataRealtime,
+        })}
+      >
         <Tabs
           value={timeframe}
           onValueChange={(value) => updateTimeframe(value as Timeframe)}
@@ -198,6 +208,8 @@ const StockChart = React.memo(function StockInnerChart({
             ))}
           </TabsList>
         </Tabs>
+
+        {isDataRealtime && <ConnectionTag connectionState={connectionState} />}
       </CardHeader>
       <CardContent>
         {isError ? (
@@ -236,6 +248,8 @@ export function ComparePage() {
     multipleStocksData,
     isInitialMultipleStocksDataLoading,
     isMultipleStocksDataError,
+    isMultipleStocksDataRealtime,
+    multipleStocksDataConnectionState,
   } = useMultipleStockData({
     symbols: Array.from(selectedStocks),
     timeframe,
@@ -274,6 +288,8 @@ export function ComparePage() {
         data={multipleStocksData}
         isLoading={isInitialMultipleStocksDataLoading}
         isError={isMultipleStocksDataError}
+        connectionState={multipleStocksDataConnectionState}
+        isDataRealtime={isMultipleStocksDataRealtime}
       />
     </div>
   )
