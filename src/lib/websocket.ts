@@ -9,13 +9,14 @@ export type SingleSubscription =
   | SingleTradeSubscription
   | SingleAggregateSubscription
 
-type Subscription<S extends string> = S extends `${infer First},${infer Rest}`
-  ? First extends SingleSubscription
-    ? Rest extends string
-      ? `${First},${Subscription<Rest>}`
+export type Subscription<S extends string> =
+  S extends `${infer First},${infer Rest}`
+    ? First extends SingleSubscription
+      ? Rest extends string
+        ? `${First},${Subscription<Rest>}`
+        : never
       : never
-    : never
-  : SingleSubscription
+    : SingleSubscription
 
 type AuthAction = {
   action: 'auth'
