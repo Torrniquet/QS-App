@@ -14,10 +14,10 @@ import { STOCK_LIMITS } from '../constants'
 import { api } from '@/lib/api'
 
 export function useMultipleStockData({
-  symbols,
+  stocks,
   timeframe,
 }: {
-  symbols: Array<string>
+  stocks: Array<string>
   timeframe: Timeframe
 }) {
   const [connectionState, setConnectionState] =
@@ -30,9 +30,9 @@ export function useMultipleStockData({
     isLoading: isLoadingHistorical,
     isError,
   } = useQuery({
-    queryKey: multiStockKeys.bySymbols(symbols, timeframe),
-    queryFn: () => api.getMultipleStockData(symbols, timeframe),
-    enabled: symbols.length > 0,
+    queryKey: multiStockKeys.byStocks(stocks, timeframe),
+    queryFn: () => api.getMultipleStockData(stocks, timeframe),
+    enabled: stocks.length > 0,
   })
 
   useEffect(() => {
@@ -42,10 +42,10 @@ export function useMultipleStockData({
   const isRealtime = timeframe === '1D'
   // Replace the entire WebSocket effect with:
   useEffect(() => {
-    if (!symbols.length || !isRealtime) return
+    if (!stocks.length || !isRealtime) return
 
-    const subscription = symbols
-      .map((symbol) => `A.${symbol}`)
+    const subscription = stocks
+      .map((stock) => `A.${stock}`)
       .join(',') as Subscription<string>
 
     polygonWS.addConnectionStateHandler(setConnectionState)
@@ -83,7 +83,7 @@ export function useMultipleStockData({
       polygonWS.removeMessageHandler(subscription, messageHandler)
       polygonWS.unsubscribe(subscription)
     }
-  }, [symbols, isRealtime])
+  }, [stocks, isRealtime])
 
   return {
     multipleStocksData: isRealtime ? realtimeData : historicalData,

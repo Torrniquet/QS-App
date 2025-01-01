@@ -25,26 +25,26 @@ const StockSearch = React.memo(function StockSearch({
   onStockRemove,
   selectedStocks,
 }: {
-  onStockAdd: (stock: StockResult) => void
-  onStockRemove: (symbol: string) => void
+  onStockAdd: (stockResult: StockResult) => void
+  onStockRemove: (stock: string) => void
   selectedStocks: Set<string>
 }) {
   const { status, results, setQuery } = useStockSearch()
   const timeframe = useTimeframe()
   const queryClient = useQueryClient()
 
-  function prefetchStockData(hoveredSymbol: string) {
-    if (!hoveredSymbol) return
+  function prefetchStockData(hoveredStock: string) {
+    if (!hoveredStock) return
 
     // This is a hack for calculating the potential future key ahead of time
     // We can prefetch like this when hovering or focusing on the autocomplete
-    const symbolsToFetch = Array.from(
-      new Set([...Array.from(selectedStocks), hoveredSymbol])
+    const stocksToFetch = Array.from(
+      new Set([...Array.from(selectedStocks), hoveredStock])
     )
 
     void queryClient.prefetchQuery({
-      queryKey: multiStockKeys.bySymbols(symbolsToFetch, timeframe),
-      queryFn: () => api.getMultipleStockData(symbolsToFetch, timeframe),
+      queryKey: multiStockKeys.byStocks(stocksToFetch, timeframe),
+      queryFn: () => api.getMultipleStockData(stocksToFetch, timeframe),
     })
   }
 
@@ -65,14 +65,14 @@ const StockSearch = React.memo(function StockSearch({
           onSelect={onStockAdd}
           renderItem={(stock, isHighlighted) => {
             if (isHighlighted) {
-              const symbolsToFetch = Array.from(
+              const stocksToFetch = Array.from(
                 new Set([...Array.from(selectedStocks), stock.symbol])
               )
 
               void queryClient.prefetchQuery({
-                queryKey: multiStockKeys.bySymbols(symbolsToFetch, timeframe),
+                queryKey: multiStockKeys.byStocks(stocksToFetch, timeframe),
                 queryFn: () =>
-                  api.getMultipleStockData(symbolsToFetch, timeframe),
+                  api.getMultipleStockData(stocksToFetch, timeframe),
               })
             }
 
@@ -103,21 +103,21 @@ const SelectedStocks = React.memo(function SelectedStocks({
   onRemove,
 }: {
   stocks: Set<string>
-  onRemove: (symbol: string) => void
+  onRemove: (stock: string) => void
 }) {
   if (stocks.size === 0) return null
 
   return (
     <div className="flex flex-wrap gap-1">
-      {Array.from(stocks).map((symbol) => (
+      {Array.from(stocks).map((stock) => (
         <div
           className="flex items-center gap-2 rounded-full bg-blue-100 px-2 py-1.5 text-sm text-blue-800"
-          key={symbol}
+          key={stock}
         >
-          <span className="text-sm">{symbol}</span>
+          <span className="text-sm">{stock}</span>
           <Button
             className="size-auto rounded-full bg-blue-200 p-1 hover:bg-blue-300"
-            onClick={() => onRemove(symbol)}
+            onClick={() => onRemove(stock)}
           >
             <XIcon size={16} className="text-blue-800" />
           </Button>
@@ -156,7 +156,7 @@ const StockChart = React.memo(function StockInnerChart({
     if (selectedStocks.size === 0) return
 
     void queryClient.prefetchQuery({
-      queryKey: multiStockKeys.bySymbols(
+      queryKey: multiStockKeys.byStocks(
         Array.from(selectedStocks),
         tabTimeframe
       ),
@@ -221,7 +221,7 @@ const StockChart = React.memo(function StockInnerChart({
               variant="outline"
               onClick={() =>
                 void queryClient.invalidateQueries({
-                  queryKey: multiStockKeys.bySymbols(
+                  queryKey: multiStockKeys.byStocks(
                     Array.from(selectedStocks),
                     timeframe
                   ),
@@ -251,7 +251,7 @@ export function ComparePage() {
     isMultipleStocksDataRealtime,
     multipleStocksDataConnectionState,
   } = useMultipleStockData({
-    symbols: Array.from(selectedStocks),
+    stocks: Array.from(selectedStocks),
     timeframe,
   })
 
@@ -268,10 +268,10 @@ export function ComparePage() {
     [selectedStocks.size]
   )
 
-  const handleStockRemove = useCallback((symbol: string) => {
+  const handleStockRemove = useCallback((stock: string) => {
     setSelectedStocks((prev) => {
       const newSet = new Set(prev)
-      newSet.delete(symbol)
+      newSet.delete(stock)
       return newSet
     })
   }, [])
