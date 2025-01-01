@@ -105,6 +105,23 @@ const SelectedStocks = React.memo(function SelectedStocks({
   stocks: Set<string>
   onRemove: (stock: string) => void
 }) {
+  const queryClient = useQueryClient()
+  const timeframe = useTimeframe()
+
+  function prefetchStocksIfTagWasRemoved(hoveredStock: string) {
+    if (!stocks.has(hoveredStock)) return
+
+    const stocksWithoutHoveredStock = Array.from(stocks).filter(
+      (stock) => stock !== hoveredStock
+    )
+
+    void queryClient.prefetchQuery({
+      queryKey: multiStockKeys.byStocks(stocksWithoutHoveredStock, timeframe),
+      queryFn: () =>
+        api.getMultipleStockData(stocksWithoutHoveredStock, timeframe),
+    })
+  }
+
   if (stocks.size === 0) return null
 
   return (
@@ -113,6 +130,7 @@ const SelectedStocks = React.memo(function SelectedStocks({
         <div
           className="flex items-center gap-2 rounded-full bg-blue-100 px-2 py-1.5 text-sm text-blue-800"
           key={stock}
+          onMouseEnter={() => prefetchStocksIfTagWasRemoved(stock)}
         >
           <span className="text-sm">{stock}</span>
           <Button
