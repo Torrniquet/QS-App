@@ -6,7 +6,6 @@ import {
   ConnectionState,
   polygonWS,
   priceDataWebSocketMessageSchema,
-  Subscription,
   WebSocketMessage,
 } from '@/lib/websocket'
 import { PriceData } from '@/lib/schemas'
@@ -45,7 +44,7 @@ export function useStockPrice({
   useEffect(() => {
     if (!symbol || !snapshot || !isRealtime) return
 
-    const subscription: Subscription = `T.${symbol}`
+    const subscription = `T.${symbol}` as const
 
     // Handle connection state
     polygonWS.addConnectionStateHandler(setConnectionState)

@@ -6,7 +6,6 @@ import {
   chartDataWebSocketMessageSchema,
   ConnectionState,
   polygonWS,
-  Subscription,
   WebSocketMessage,
 } from '@/lib/websocket'
 import { ChartDataPoint } from '@/lib/schemas'
@@ -45,7 +44,7 @@ export function useChartData({
   useEffect(() => {
     if (!symbol || !isRealtime) return
 
-    const subscription: Subscription = `A.${symbol}`
+    const subscription = `A.${symbol}` as const
 
     polygonWS.addConnectionStateHandler(setConnectionState)
 

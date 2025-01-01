@@ -3,38 +3,50 @@ import { w3cwebsocket } from 'websocket'
 import { z } from 'zod'
 import { env } from './env'
 
-export type Subscription = `T.${string}` | `A.${string}`
+export type SingleTradeSubscription = `T.${string}`
+export type SingleAggregateSubscription = `A.${string}`
+export type SingleSubscription =
+  | SingleTradeSubscription
+  | SingleAggregateSubscription
+
+type Subscription<S extends string> = S extends `${infer First},${infer Rest}`
+  ? First extends SingleSubscription
+    ? Rest extends string
+      ? `${First},${Subscription<Rest>}`
+      : never
+    : never
+  : SingleSubscription
 
 type AuthAction = {
   action: 'auth'
   params: string
 }
 
-type SubscribeTickerAction = {
+type SubscribeTickerAction<S extends string> = {
   action: 'subscribe'
-  params: Subscription
+  params: Subscription<S>
 }
 
-type UnsubscribeTickerAction = {
+type UnsubscribeTickerAction<S extends string> = {
   action: 'unsubscribe'
-  params: Subscription
+  params: Subscription<S>
 }
 
-type SubscribeAggregateAction = {
+type SubscribeAggregateAction<S extends string> = {
   action: 'subscribe'
-  params: Subscription
+  params: Subscription<S>
 }
 
-type UnsubscribeAggregateAction = {
+type UnsubscribeAggregateAction<S extends string> = {
   action: 'unsubscribe'
-  params: Subscription
+  params: Subscription<S>
 }
 
-type SocketActions =
-  | SubscribeTickerAction
-  | UnsubscribeTickerAction
-  | SubscribeAggregateAction
-  | UnsubscribeAggregateAction
+type SocketActions<S extends string> =
+  | SubscribeTickerAction<S>
+  | UnsubscribeTickerAction<S>
+  | SubscribeAggregateAction<S>
+  | UnsubscribeAggregateAction<S>
   | AuthAction
 
 const statusMessageSchema = z.object({
@@ -109,19 +121,22 @@ export type ConnectionState =
   | 'disconnected'
   | 'authenticated'
 
-class PolygonWebSocket {
+class PolygonWebSocket<RawStringGeneric extends string> {
   private ws: w3cwebsocket | null = null
 
   // Map of subscription to set of handlers
   // This lets multiple handlers listen to a single subscription
-  private messageHandlers = new Map<Subscription, Set<MessageHandler>>()
+  private messageHandlers = new Map<
+    Subscription<RawStringGeneric>,
+    Set<MessageHandler>
+  >()
 
   // Set of handlers for connection state changes
   // This isn't necessary for the ones using this ws instance
   // But if they wanna be informed of connection state changes, they can add a handler
   private connectionHandlers = new Set<ConnectionStateHandler>()
 
-  private subscriptions = new Set<Subscription>()
+  private subscriptions = new Set<Subscription<RawStringGeneric>>()
   private reconnectAttempts = 0
   private connectionState: ConnectionState = 'disconnected'
 
@@ -212,10 +227,10 @@ class PolygonWebSocket {
     this.connectionHandlers.forEach((handler) => handler(state))
   }
 
-  subscribe(subscription: Subscription) {
+  subscribe(subscription: Subscription<RawStringGeneric>) {
     this.subscriptions.add(subscription)
     if (this.isAuthenticated()) {
-      const action: SocketActions = {
+      const action: SocketActions<RawStringGeneric> = {
         action: 'subscribe',
         params: subscription,
       }
@@ -223,10 +238,10 @@ class PolygonWebSocket {
     }
   }
 
-  unsubscribe(subscription: Subscription) {
+  unsubscribe(subscription: Subscription<RawStringGeneric>) {
     this.subscriptions.delete(subscription)
     if (this.isAuthenticated()) {
-      const action: SocketActions = {
+      const action: SocketActions<RawStringGeneric> = {
         action: 'unsubscribe',
         params: subscription,
       }
@@ -235,14 +250,20 @@ class PolygonWebSocket {
     }
   }
 
-  addMessageHandler(subscription: Subscription, handler: MessageHandler) {
+  addMessageHandler(
+    subscription: Subscription<RawStringGeneric>,
+    handler: MessageHandler
+  ) {
     if (!this.messageHandlers.has(subscription)) {
       this.messageHandlers.set(subscription, new Set())
     }
     this.messageHandlers.get(subscription)!.add(handler)
   }
 
-  removeMessageHandler(subscription: Subscription, handler: MessageHandler) {
+  removeMessageHandler(
+    subscription: Subscription<RawStringGeneric>,
+    handler: MessageHandler
+  ) {
     this.messageHandlers.get(subscription)?.delete(handler)
     if (this.messageHandlers.get(subscription)?.size === 0) {
       this.messageHandlers.delete(subscription)
