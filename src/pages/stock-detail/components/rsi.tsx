@@ -1,4 +1,4 @@
-import { useRSI } from '../hooks/useRSI'
+import { useRSI } from '../hooks/use-rsi'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import {
   ChartContainer,

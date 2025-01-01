@@ -7,7 +7,7 @@ import {
 } from '@/components/ui/chart'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid } from 'recharts'
 import { useTimeframe } from '@/hooks/use-timeframe'
-import { useSMA } from '../hooks/useSMA'
+import { useSMA } from '../hooks/use-sma'
 import { technicalChartConfig } from '../constants'
 import { getTimeFormatter } from '@/lib/timeframe'
 

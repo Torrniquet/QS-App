@@ -1,6 +1,6 @@
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
-import { useMACD } from '../hooks/useMACD'
+import { useMACD } from '../hooks/use-macd'
 import { useTimeframe } from '@/hooks/use-timeframe'
 import { technicalChartConfig } from '../constants'
 import {

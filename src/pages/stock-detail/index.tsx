@@ -1,6 +1,6 @@
 import { useParams } from 'react-router'
-import { useTickerDetail } from './hooks/useTickerDetail'
-import { useStockPrice } from './hooks/useStockPrice'
+import { useTickerDetail } from './hooks/use-ticker-detail'
+import { useStockPrice } from './hooks/use-stock-price'
 import { useTimeframe } from '@/hooks/use-timeframe'
 import { RSI } from './components/rsi'
 import { MACD } from './components/macd'

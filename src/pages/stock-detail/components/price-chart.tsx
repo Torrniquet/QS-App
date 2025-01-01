@@ -1,4 +1,4 @@
-import { useChartData } from '../hooks/useChartData'
+import { useChartData } from '../hooks/use-chart-data'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useTimeframe } from '@/hooks/use-timeframe'
 import {

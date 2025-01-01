@@ -1,6 +1,6 @@
 import { StockCardSkeletonList } from '@/components/StockCardSkeletonList'
 import { StockCard } from '@/components/StockCard'
-import { useGetStocksBySymbols } from '@/hooks/useGetStocksBySymbols'
+import { useGetStocksBySymbols } from '@/hooks/use-get-stocks-by-symbols'
 import { snapshotKeys, tickerKeys } from '@/lib/queryKeys'
 import { Stock } from '@/lib/schemas'
 import { useEffect, useState } from 'react'

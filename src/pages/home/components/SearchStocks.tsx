@@ -1,4 +1,4 @@
-import { useSearchStocks } from '../hooks/useSearchStocks'
+import { useSearchStocks } from '../hooks/use-search-stocks'
 import { StockCardSkeletonList } from '@/components/StockCardSkeletonList'
 import { useSearchParams } from 'react-router'
 import { useRef, useCallback, useEffect } from 'react'
