@@ -38,6 +38,7 @@ export function Autocomplete<ResultValue>({
     highlightedIndex,
   } = useCombobox({
     items: results,
+    // See: https://github.com/downshift-js/downshift/issues/964#issuecomment-595059407
     itemToString: itemToString,
     onInputValueChange: (changes) => {
       onSearch(changes.inputValue || '')
@@ -62,6 +63,8 @@ export function Autocomplete<ResultValue>({
       />
       {isLoading && <Loader2 className="absolute right-2 top-2 animate-spin" />}
 
+      {/* Can't conditionally render this */}
+      {/* See: https://github.com/downshift-js/downshift/issues/1167#issuecomment-1088022842 */}
       <ul
         {...getMenuProps()}
         className={cn(
