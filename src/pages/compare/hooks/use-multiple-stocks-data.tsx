@@ -6,13 +6,12 @@ import {
   Subscription,
   WebSocketMessage,
 } from '@/lib/websocket'
-import { MultipleStocksData } from '../types'
 import { useQuery } from '@tanstack/react-query'
 import { multiStockKeys } from '@/lib/queryKeys'
-import { api } from '@/lib/api'
 import { useEffect, useState } from 'react'
-import { ChartDataPoint } from '@/lib/schemas'
+import { ChartDataPoint, MultipleStocksData } from '@/lib/schemas'
 import { STOCK_LIMITS } from '../constants'
+import { api } from '@/lib/api'
 
 export function useMultipleStockData({
   symbols,
@@ -30,19 +29,9 @@ export function useMultipleStockData({
     data: historicalData,
     isLoading: isLoadingHistorical,
     isError,
-    error,
   } = useQuery({
     queryKey: multiStockKeys.bySymbols(symbols, timeframe),
-    queryFn: async () => {
-      const dataArrays = await Promise.all(
-        symbols.map((symbol) => api.getChartData(symbol, timeframe))
-      )
-
-      return symbols.reduce((acc, symbol, index) => {
-        acc[symbol] = dataArrays[index]
-        return acc
-      }, {} as MultipleStocksData)
-    },
+    queryFn: () => api.getMultipleStockData(symbols, timeframe),
     enabled: symbols.length > 0,
   })
 

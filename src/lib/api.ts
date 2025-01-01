@@ -6,6 +6,7 @@ import {
   macdResultSchema,
   rsiResultSchema,
   smaResultSchema,
+  MultipleStocksData,
 } from './schemas'
 import { rest } from './sdk'
 import { z } from 'zod'
@@ -154,5 +155,15 @@ export const api = {
     if (!parsedResults.success) throw new Error('Invalid SMA data')
 
     return parsedResults.data
+  },
+  getMultipleStockData: async (symbols: string[], timeframe: Timeframe) => {
+    const dataArrays = await Promise.all(
+      symbols.map((symbol) => api.getChartData(symbol, timeframe))
+    )
+
+    return symbols.reduce((acc, symbol, index) => {
+      acc[symbol] = dataArrays[index]
+      return acc
+    }, {} as MultipleStocksData)
   },
 }

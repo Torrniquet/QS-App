@@ -29,34 +29,68 @@ function createChartConfig(symbols: string[]) {
   }, {} as ChartConfig)
 }
 
+type MultipleStocksChartProps = {
+  data: Record<string, ChartDataPoint[]>
+  timeframe: Timeframe
+}
+
 export function MultipleStocksChart({
   data,
   timeframe,
-  isError,
-}: {
-  data: Record<string, ChartDataPoint[]>
-  timeframe: Timeframe
-  isError: boolean
-}) {
-  // Combine all data points preserving the timestamp
+}: MultipleStocksChartProps) {
   const combinedData = useMemo(() => {
-    // Get all unique timestamps
-    const timestamps = new Set(
-      Object.values(data).flatMap((points) => points.map((p) => p.t))
+    // 1. Extract all timestamps from all stocks
+    const allDataPoints = Object.values(data).flat()
+    // t stands for timestamp
+    const uniqueTimestamps = [
+      ...new Set(allDataPoints.map((point) => point.t)),
+    ].sort()
+
+    // 2. Create a map of timestamps to prices for each stock
+    const stockPricesByTime = Object.entries(data).reduce(
+      (priceMap, [symbol, points]) => {
+        // Create a quick lookup of timestamp -> closing price for this stock
+        // c stands for closing price
+        // it's what we're interested in when showing price on the chart
+        const stockPrices = points.reduce(
+          (prices, point) => {
+            prices[point.t] = point.c
+            return prices
+          },
+          {} as Record<number, number>
+        )
+
+        priceMap[symbol] = stockPrices
+        return priceMap
+      },
+      {} as Record<string, Record<number, number>>
     )
 
-    // Create combined data points
-    return Array.from(timestamps)
-      .map((timestamp) => {
-        const point = { t: timestamp } as Record<string, number>
-        // Add each symbol's closing price for this timestamp
-        Object.entries(data).forEach(([symbol, points]) => {
-          const matchingPoint = points.find((p) => p.t === timestamp)
-          point[symbol] = matchingPoint?.c ?? 0
-        })
-        return point
+    // 3. Combine into final data points
+    // will end up like:
+    // [
+    //   { t: 1714857600, AAPL: 150.12, GOOGL: 2800.15, ... },
+    //   { t: 1714857660, AAPL: 150.13, GOOGL: 2800.16, ... },
+    //   ...
+    // ]
+    // The goal is to group all the data points by timestamp
+    // It's one of the keys when working with recharts
+    // The root is all about how you group and structure your data
+    const combinedPoints = uniqueTimestamps.map((timestamp) => {
+      const point = { t: timestamp } as Record<string, number>
+
+      // Add each stock's price for this timestamp
+      Object.entries(stockPricesByTime).forEach(([symbol, prices]) => {
+        // If the stock has a price for this timestamp, add it to the point
+        // `prices[timestamp]` is the closing price for this stock at this timestamp
+        // That's why when creating `stockPrices` we do `prices[point.t] = point.c`
+        point[symbol] = prices[timestamp] ?? 0
       })
-      .sort((a, b) => a.t - b.t)
+
+      return point
+    })
+
+    return combinedPoints
   }, [data])
 
   const chartConfig = createChartConfig(Object.keys(data))
@@ -85,6 +119,9 @@ export function MultipleStocksChart({
               key={symbol}
               type="monotone"
               dataKey={symbol}
+              // This is how shadcn works
+              // you get colors by using the color variable and the key
+              // in our case, symbol is the key
               stroke={`var(--color-${symbol})`}
               dot={false}
               name={symbol}

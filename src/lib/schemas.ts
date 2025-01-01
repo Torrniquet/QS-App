@@ -69,3 +69,5 @@ export const smaResultSchema = z.object({
   timestamp: z.number(),
   value: z.number(),
 })
+
+export type MultipleStocksData = Record<string, ChartDataPoint[]>

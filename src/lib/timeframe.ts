@@ -1,6 +1,9 @@
 import { format, startOfToday, subDays, subMonths, subYears } from 'date-fns'
 
-export const timeframeConfig = {
+export const timeframeConfig: Record<
+  Timeframe,
+  { label: string; interval: string }
+> = {
   '1D': { label: 'Day (Live)', interval: 'second' },
   '1W': { label: '1 Week', interval: 'hour' },
   '1M': { label: '1 Month', interval: 'day' },

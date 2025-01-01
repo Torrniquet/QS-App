@@ -1,9 +1,9 @@
 export const CHART_COLORS = [
-  '--chart-1',
-  '--chart-2',
-  '--chart-3',
-  '--chart-4',
-  '--chart-5',
+  '--stock-comparison-chart-1',
+  '--stock-comparison-chart-2',
+  '--stock-comparison-chart-3',
+  '--stock-comparison-chart-4',
+  '--stock-comparison-chart-5',
 ] as const
 
 export const STOCK_LIMITS = {

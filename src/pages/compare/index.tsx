@@ -5,7 +5,7 @@ import { XIcon } from 'lucide-react'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Timeframe, timeframeConfig } from '@/lib/timeframe'
 import { useQueryClient } from '@tanstack/react-query'
-import { TIMEFRAME_KEY } from '@/lib/queryKeys'
+import { multiStockKeys, TIMEFRAME_KEY } from '@/lib/queryKeys'
 import { useTimeframe } from '@/hooks/use-timeframe'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useStockSearch } from './hooks/use-stock-search'
@@ -15,6 +15,7 @@ import { useMultipleStockData } from './hooks/use-multiple-stocks-data'
 import { useState } from 'react'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { STOCK_LIMITS } from './constants'
+import { api } from '@/lib/api'
 
 export function ComparePage() {
   const [selectedStocks, setSelectedStocks] = useState<Set<string>>(new Set())
@@ -55,6 +56,38 @@ export function ComparePage() {
     })
   }
 
+  // PS. The prefetching things I just lov to play around with to see how they shape the experience
+  // In an actual production app, you'd wanna be careful with the amount of requests you could be making
+  // e.g. if users are on mobile, you don't wanna make the experience laggy
+
+  function prefetchStocksForTabs(tabTimeframe: Timeframe) {
+    if (selectedStocks.size === 0) return
+
+    void queryClient.prefetchQuery({
+      queryKey: multiStockKeys.bySymbols(
+        Array.from(selectedStocks),
+        tabTimeframe
+      ),
+      queryFn: () =>
+        api.getMultipleStockData(Array.from(selectedStocks), tabTimeframe),
+    })
+  }
+
+  function prefetchStockData(hoveredSymbol: string) {
+    if (!hoveredSymbol) return
+
+    // This is a hack for calculating the potential future key ahead of time
+    // We can prefetch like this when hovering or focusing on the autocomplete
+    const symbolsToFetch = Array.from(
+      new Set([...Array.from(selectedStocks), hoveredSymbol])
+    )
+
+    void queryClient.prefetchQuery({
+      queryKey: multiStockKeys.bySymbols(symbolsToFetch, timeframe),
+      queryFn: () => api.getMultipleStockData(symbolsToFetch, timeframe),
+    })
+  }
+
   return (
     <div className="container mx-auto flex flex-col gap-6 p-4">
       <Card className="mx-auto w-[600px]">
@@ -71,17 +104,33 @@ export function ComparePage() {
             onSearch={setQuery}
             itemToString={(item) => item?.symbol || ''}
             onSelect={handleStockAdd}
-            renderItem={(stock, isHighlighted) => (
-              <div
-                className={cn(
-                  'flex items-center gap-2 px-3 py-2 text-sm',
-                  isHighlighted && 'bg-blue-100'
-                )}
-              >
-                <span className="font-bold">{stock.symbol}</span> -
-                <span className="line-clamp-1">{stock.name}</span>
-              </div>
-            )}
+            renderItem={(stock, isHighlighted) => {
+              if (isHighlighted) {
+                const symbolsToFetch = Array.from(
+                  new Set([...Array.from(selectedStocks), stock.symbol])
+                )
+
+                void queryClient.prefetchQuery({
+                  queryKey: multiStockKeys.bySymbols(symbolsToFetch, timeframe),
+                  queryFn: () =>
+                    api.getMultipleStockData(symbolsToFetch, timeframe),
+                })
+              }
+
+              return (
+                <div
+                  className={cn(
+                    'flex items-center gap-2 px-3 py-2 text-sm',
+                    isHighlighted && 'bg-blue-100'
+                  )}
+                  onMouseEnter={() => prefetchStockData(stock.symbol)}
+                  onFocus={() => prefetchStockData(stock.symbol)}
+                >
+                  <span className="font-bold">{stock.symbol}</span> -
+                  <span className="line-clamp-1">{stock.name}</span>
+                </div>
+              )
+            }}
           />
 
           {selectedStocks.size > 0 && (
@@ -121,33 +170,55 @@ export function ComparePage() {
         </Card>
       )}
 
-      {selectedStocks.size > 0 &&
-        !isInitialMultipleStocksDataLoading &&
-        multipleStocksData && (
-          <Card>
-            <CardHeader>
-              <Tabs
-                value={timeframe}
-                onValueChange={(value) => updateTimeframe(value as Timeframe)}
-              >
-                <TabsList>
-                  {Object.entries(timeframeConfig).map(([key, { label }]) => (
-                    <TabsTrigger key={key} value={key}>
-                      {label}
-                    </TabsTrigger>
-                  ))}
-                </TabsList>
-              </Tabs>
-            </CardHeader>
-            <CardContent>
+      {selectedStocks.size > 0 && (
+        <Card>
+          <CardHeader>
+            <Tabs
+              value={timeframe}
+              onValueChange={(value) => updateTimeframe(value as Timeframe)}
+            >
+              <TabsList>
+                {Object.entries(timeframeConfig).map(([key, { label }]) => (
+                  <TabsTrigger
+                    key={key}
+                    value={key}
+                    onMouseEnter={() => prefetchStocksForTabs(key as Timeframe)}
+                  >
+                    {label}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+            </Tabs>
+          </CardHeader>
+          <CardContent>
+            {isMultipleStocksDataError ? (
+              <div className="flex h-[400px] flex-col items-center justify-center gap-4">
+                <p className="text-sm text-muted-foreground">
+                  Unable to load chart data
+                </p>
+                <Button
+                  variant="outline"
+                  onClick={() =>
+                    void queryClient.invalidateQueries({
+                      queryKey: multiStockKeys.bySymbols(
+                        Array.from(selectedStocks),
+                        timeframe
+                      ),
+                    })
+                  }
+                >
+                  Try again
+                </Button>
+              </div>
+            ) : multipleStocksData ? (
               <MultipleStocksChart
                 data={multipleStocksData}
                 timeframe={timeframe}
-                isError={isMultipleStocksDataError}
               />
-            </CardContent>
-          </Card>
-        )}
+            ) : null}
+          </CardContent>
+        </Card>
+      )}
     </div>
   )
 }
