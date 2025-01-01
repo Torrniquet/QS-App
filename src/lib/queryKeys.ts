@@ -1,4 +1,5 @@
 import { StockFilters } from './schemas'
+import { Timeframe } from './timeframe'
 
 export const tickerKeys = {
   all: ['stocks'] as const,
@@ -45,6 +46,12 @@ export const stockDetailKeys = {
         timeframe,
       ] as const,
   },
+}
+
+export const multiStockKeys = {
+  all: ['multi-stock'] as const,
+  bySymbols: (symbols: string[], timeframe: Timeframe) =>
+    [...multiStockKeys.all, symbols, timeframe] as const,
 }
 
 export const TIMEFRAME_KEY = ['timeframe'] as const
