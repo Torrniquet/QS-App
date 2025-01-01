@@ -17,7 +17,7 @@ export function useMultipleStockData({
   symbols,
   timeframe,
 }: {
-  symbols: string[]
+  symbols: Array<string>
   timeframe: Timeframe
 }) {
   const [connectionState, setConnectionState] =
@@ -50,7 +50,7 @@ export function useMultipleStockData({
 
     polygonWS.addConnectionStateHandler(setConnectionState)
 
-    const messageHandler = (messages: WebSocketMessage[]) => {
+    const messageHandler = (messages: Array<WebSocketMessage>) => {
       messages.forEach((msg) => {
         const parsedMsg = chartDataWebSocketMessageSchema.parse(msg)
 

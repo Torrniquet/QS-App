@@ -66,25 +66,26 @@ const SidebarProvider = React.forwardRef<
     ref
   ) => {
     const isMobile = useIsMobile()
-    const [openMobile, setOpenMobile] = React.useState(false)
+    const [isOpenMobile, setOpenMobile] = React.useState(false)
 
     // This is the internal state of the sidebar.
     // We use openProp and setOpenProp for control from outside the component.
-    const [_open, _setOpen] = React.useState(defaultOpen)
-    const open = openProp ?? _open
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    const [_isOpen, _setIsOpen] = React.useState(defaultOpen)
+    const isOpen = openProp ?? _isOpen
     const setOpen = React.useCallback(
       (value: boolean | ((value: boolean) => boolean)) => {
-        const openState = typeof value === 'function' ? value(open) : value
+        const isOpenState = typeof value === 'function' ? value(isOpen) : value
         if (setOpenProp) {
-          setOpenProp(openState)
+          setOpenProp(isOpenState)
         } else {
-          _setOpen(openState)
+          _setIsOpen(isOpenState)
         }
 
         // This sets the cookie to keep the sidebar state.
-        document.cookie = `${SIDEBAR_COOKIE_NAME}=${openState}; path=/; max-age=${SIDEBAR_COOKIE_MAX_AGE}`
+        document.cookie = `${SIDEBAR_COOKIE_NAME}=${isOpenState}; path=/; max-age=${SIDEBAR_COOKIE_MAX_AGE}`
       },
-      [setOpenProp, open]
+      [setOpenProp, isOpen]
     )
 
     // Helper to toggle the sidebar.
@@ -112,19 +113,27 @@ const SidebarProvider = React.forwardRef<
 
     // We add a state so that we can do data-state="expanded" or "collapsed".
     // This makes it easier to style the sidebar with Tailwind classes.
-    const state = open ? 'expanded' : 'collapsed'
+    const state = isOpen ? 'expanded' : 'collapsed'
 
     const contextValue = React.useMemo<SidebarContext>(
       () => ({
         state,
-        open,
+        open: isOpen,
         setOpen,
         isMobile,
-        openMobile,
+        openMobile: isOpenMobile,
         setOpenMobile,
         toggleSidebar,
       }),
-      [state, open, setOpen, isMobile, openMobile, setOpenMobile, toggleSidebar]
+      [
+        state,
+        isOpen,
+        setOpen,
+        isMobile,
+        isOpenMobile,
+        setOpenMobile,
+        toggleSidebar,
+      ]
     )
 
     return (
@@ -173,7 +182,12 @@ const Sidebar = React.forwardRef<
     },
     ref
   ) => {
-    const { isMobile, state, openMobile, setOpenMobile } = useSidebar()
+    const {
+      isMobile,
+      state,
+      openMobile: isOpenMobile,
+      setOpenMobile,
+    } = useSidebar()
 
     if (collapsible === 'none') {
       return (
@@ -192,7 +206,7 @@ const Sidebar = React.forwardRef<
 
     if (isMobile) {
       return (
-        <Sheet open={openMobile} onOpenChange={setOpenMobile} {...props}>
+        <Sheet open={isOpenMobile} onOpenChange={setOpenMobile} {...props}>
           <SheetContent
             data-sidebar="sidebar"
             data-mobile="true"

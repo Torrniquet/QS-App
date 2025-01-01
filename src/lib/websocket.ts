@@ -190,7 +190,7 @@ class PolygonWebSocket<RawStringGeneric extends string> {
     return this.connectionState === 'authenticated'
   }
 
-  private handleDataMessages(messages: WebSocketMessage[]) {
+  private handleDataMessages(messages: Array<WebSocketMessage>) {
     this.messageHandlers.forEach((handlers, subscription) => {
       const relevantMessages = messages.filter(
         (
@@ -212,7 +212,7 @@ class PolygonWebSocket<RawStringGeneric extends string> {
     })
   }
 
-  private handleStatusMessages(messages: WebSocketMessage[]) {
+  private handleStatusMessages(messages: Array<WebSocketMessage>) {
     for (const msg of messages) {
       if (msg.ev === 'status' && msg.status === 'auth_success') {
         console.log('WebSocket Authenticated')

@@ -17,7 +17,7 @@ import { CartesianGrid, Line, LineChart, XAxis, YAxis } from 'recharts'
 //   "GOOGL": { label: "GOOGL", color: "hsl(var(--color-googl))" },
 //   ...
 // }
-function createChartConfig(symbols: string[]) {
+function createChartConfig(symbols: Array<string>) {
   return symbols.reduce((config, symbol, index) => {
     if (index >= CHART_COLORS.length) return config // Safety check to not exceed our colors
 
@@ -30,7 +30,7 @@ function createChartConfig(symbols: string[]) {
 }
 
 type MultipleStocksChartProps = {
-  data: Record<string, ChartDataPoint[]>
+  data: Record<string, Array<ChartDataPoint>>
   timeframe: Timeframe
 }
 

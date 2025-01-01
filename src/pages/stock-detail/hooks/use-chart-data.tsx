@@ -24,7 +24,7 @@ export function useChartData({
 }) {
   const [connectionState, setConnectionState] =
     useState<ConnectionState>('disconnected')
-  const [realtimeData, setRealtimeData] = useState<ChartDataPoint[]>([])
+  const [realtimeData, setRealtimeData] = useState<Array<ChartDataPoint>>([])
 
   const {
     data: historicalData,
@@ -41,9 +41,14 @@ export function useChartData({
     if (historicalData) setRealtimeData(historicalData)
   }, [historicalData])
 
+  // Hooks rule will complain here saying deps are unknown
+  // However this is fine
+  // Set state is referentially stable across re renders
+  // Meaning it won't change and trigger re renders
+  // So this is safe, and we can ignore the warning
   const throttledSetRealtimeData = useCallback(
     throttle(
-      (newData: ChartDataPoint[]) => setRealtimeData(newData),
+      (newData: Array<ChartDataPoint>) => setRealtimeData(newData),
       THROTTLE_TIME_FOR_REAL_TIME_DATA
     ),
     []
@@ -58,7 +63,7 @@ export function useChartData({
 
     polygonWS.addConnectionStateHandler(setConnectionState)
 
-    const messageHandler = (messages: WebSocketMessage[]) => {
+    const messageHandler = (messages: Array<WebSocketMessage>) => {
       messages.forEach((msg) => {
         console.log('msg', msg)
 

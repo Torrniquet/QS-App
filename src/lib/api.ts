@@ -156,7 +156,10 @@ export const api = {
 
     return parsedResults.data
   },
-  getMultipleStockData: async (symbols: string[], timeframe: Timeframe) => {
+  getMultipleStockData: async (
+    symbols: Array<string>,
+    timeframe: Timeframe
+  ) => {
     const dataArrays = await Promise.all(
       symbols.map((symbol) => api.getChartData(symbol, timeframe))
     )

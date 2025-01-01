@@ -39,7 +39,7 @@ export type Trade = {
   price: number
   size: number
   timestamp: number
-  conditions: number[]
+  conditions: Array<number>
 }
 
 export type PriceData = {
@@ -48,7 +48,7 @@ export type PriceData = {
   changePercent: number
   volume: number
   lastUpdate: number
-  trades: Trade[]
+  trades: Array<Trade>
   previousClose: number
   dayOpen: number
 }
@@ -70,4 +70,4 @@ export const smaResultSchema = z.object({
   value: z.number(),
 })
 
-export type MultipleStocksData = Record<string, ChartDataPoint[]>
+export type MultipleStocksData = Record<string, Array<ChartDataPoint>>

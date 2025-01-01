@@ -37,6 +37,17 @@ export default tseslint.config(
         'warn',
         { allowConstantExport: true },
       ],
+      'no-await-in-loop': 'error',
+      '@typescript-eslint/array-type': ['error', { default: 'generic' }],
+      '@typescript-eslint/naming-convention': [
+        'error',
+        {
+          selector: 'variable',
+          types: ['boolean'],
+          format: ['PascalCase'],
+          prefix: ['is', 'should', 'has', 'are', 'can', 'was'],
+        },
+      ],
       ...react.configs.recommended.rules,
       ...react.configs['jsx-runtime'].rules,
     },

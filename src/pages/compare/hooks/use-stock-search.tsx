@@ -10,7 +10,7 @@ export function useStockSearch(delay: number = STOCK_LIMITS.DEBOUNCE_DELAY) {
   const [status, setStatus] = useState<
     'idle' | 'loading' | 'success' | 'error'
   >('idle')
-  const [results, setResults] = useState<StockResult[]>([])
+  const [results, setResults] = useState<Array<StockResult>>([])
 
   const debouncedQuery = useDebounce(query, delay)
 

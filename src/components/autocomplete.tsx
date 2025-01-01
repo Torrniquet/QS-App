@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils'
 type InputProps = Omit<ComponentProps<'input'>, 'onSelect' | 'results'>
 
 type AutocompleteProps<ResultValue> = InputProps & {
-  results: ResultValue[]
+  results: Array<ResultValue>
   isLoading?: boolean
   onSearch: (value: string) => void
   onSelect: (item: ResultValue) => void

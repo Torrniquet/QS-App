@@ -44,6 +44,11 @@ export function useStockPrice({
     if (snapshot) setLiveData(snapshot)
   }, [snapshot])
 
+  // Hooks rule will complain here saying deps are unknown
+  // However this is fine
+  // Set state is referentially stable across re renders
+  // Meaning it won't change and trigger re renders
+  // So this is safe, and we can ignore the warning
   const throttledSetLiveData = useCallback(
     throttle((prevData: PriceData | null, msg: PriceDataWebSocketMessage) => {
       if (!prevData) return null
@@ -77,7 +82,7 @@ export function useStockPrice({
     polygonWS.addConnectionStateHandler(setConnectionState)
 
     // Handle messages
-    const messageHandler = (messages: WebSocketMessage[]) => {
+    const messageHandler = (messages: Array<WebSocketMessage>) => {
       messages.forEach((msg) => {
         // Since a specific subscription
         // We can be sure that the message is a price data message

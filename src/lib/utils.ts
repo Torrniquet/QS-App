@@ -3,7 +3,7 @@ import { Stock } from '@/lib/schemas'
 import { ISnapshot } from '@polygon.io/client-js'
 import { twMerge } from 'tailwind-merge'
 
-export function cn(...inputs: ClassValue[]) {
+export function cn(...inputs: Array<ClassValue>) {
   return twMerge(clsx(inputs))
 }
 
@@ -31,7 +31,7 @@ export function createStockLookupMap<SnapshotInfo>({
   items,
   getKey,
 }: {
-  items: SnapshotInfo[]
+  items: Array<SnapshotInfo>
   getKey: (item: SnapshotInfo) => string
 }): Map<string, SnapshotInfo> {
   return new Map(items.map((item) => [getKey(item), item]))

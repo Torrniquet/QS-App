@@ -50,7 +50,7 @@ export const stockDetailKeys = {
 
 export const multiStockKeys = {
   all: ['multi-stock'] as const,
-  bySymbols: (symbols: string[], timeframe: Timeframe) =>
+  bySymbols: (symbols: Array<string>, timeframe: Timeframe) =>
     [...multiStockKeys.all, symbols, timeframe] as const,
 }
 
