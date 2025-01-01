@@ -6,6 +6,7 @@
 
 ---
 
+- throttle real time data
 - add linting
-- extract status
+- extract status type
 - consistent naming of hooks throughout the project
