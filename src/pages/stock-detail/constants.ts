@@ -30,3 +30,5 @@ export const technicalChartConfig = {
     color: 'hsl(var(--chart-5))',
   },
 } satisfies ChartConfig
+
+export const THROTTLE_TIME_FOR_REAL_TIME_DATA = 300
