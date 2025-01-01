@@ -203,7 +203,7 @@ const StockChart = React.memo(function StockInnerChart({
         {isError ? (
           <div className="flex h-[400px] flex-col items-center justify-center gap-4">
             <p className="text-sm text-muted-foreground">
-              Unable to load chart data
+              Unable to load chart data (market could be down)
             </p>
             <Button
               variant="outline"
