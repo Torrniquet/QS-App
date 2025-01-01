@@ -187,11 +187,9 @@ export function PriceChart({ symbol }: { symbol: string | undefined }) {
         )}
       </CardHeader>
       <CardContent>
+        {/* Price line chart */}
         <div className="h-[400px]">
-          <ChartContainer
-            config={priceChartConfig}
-            className="h-[400px] w-full"
-          >
+          <ChartContainer config={priceChartConfig} className="h-full w-full">
             <LineChart data={chartData}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis
@@ -217,6 +215,7 @@ export function PriceChart({ symbol }: { symbol: string | undefined }) {
           </ChartContainer>
         </div>
 
+        {/* Volume bar chart */}
         <div className="mt-6 h-[200px] w-full">
           <ChartContainer config={priceChartConfig} className="h-full w-full">
             <BarChart data={chartData}>
