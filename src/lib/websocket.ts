@@ -140,8 +140,6 @@ class PolygonWebSocket<RawStringGeneric extends string> {
   >()
 
   // Set of handlers for connection state changes
-  // This isn't necessary for the ones using this ws instance
-  // But if they wanna be informed of connection state changes, they can add a handler
   private connectionHandlers = new Set<ConnectionStateHandler>()
 
   private subscriptions = new Set<Subscription<RawStringGeneric>>()
