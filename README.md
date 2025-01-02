@@ -1044,6 +1044,156 @@ export function useTimeframe() {
 
 </details>
 
+<details>
+  <summary>🍿 Compare page data points fix</summary>
+
+---
+
+One weird issue I had was that when comapring stocks, their latest data points may be different. This means if META has newer trades after GOOGL, the chart would drop Google's prices to 0 till a new update comes in.
+
+This looked horrible, because you had multiple timestamps where one stock did update but the other one didn't.
+
+Which totally makes sense. They are different stocks and each trade is irrelevant to the other.
+
+I fixed this by merging both old and new data points and making sure for every data point where the other stock didn't have a price, I used the last known price. This works perfect:
+
+```ts
+const throttledProcessUpdates = useCallback(
+  throttle(
+    (
+      batchedUpdates: Record<string, Array<ChartDataPoint>>,
+      currentData: MultipleStocksData
+    ) => {
+      // First, merge current and new data for each symbol
+      // In the end we need to process all the data to ensure it looks good from
+      // beginning to end and timestamps aren't messed up
+      const dataWithNewPoints = Object.entries(batchedUpdates).reduce(
+        (acc, [symbol, newPoints]) => ({
+          ...acc,
+          [symbol]: [...(currentData[symbol] || []), ...newPoints].slice(
+            -STOCK_LIMITS.MAX_DATA_POINTS
+          ),
+        }),
+        { ...currentData }
+      )
+
+      // Then normalize the merged data
+      const finalData = normalizeMultipleStocksData(dataWithNewPoints)
+
+      setRealtimeData(finalData)
+      pendingUpdatesRef.current = {}
+    },
+    THROTTLE_TIME_FOR_REAL_TIME_DATA
+  ),
+  []
+)
+```
+
+The normalize function is responsible for merging the data points and making sure the timestamps never get messed up:
+
+```ts
+/**
+ * This function takes raw data points for multiple stocks
+ * And ensures that all stocks have data points for all timestamps
+ * If a stock is missing data for a timestamp, it uses the last known value
+ * Unless it has no values yet (beginning of trading day)
+ *
+ * @param data - Raw data points for multiple stocks
+ * @returns - Normalized data points for multiple stocks
+ */
+export function normalizeMultipleStocksData(
+  data: MultipleStocksData
+): MultipleStocksData {
+  const allTimestamps = new Set<number>()
+
+  // Get all unique timestamps and create a lookup map for each stock's points
+  // This will end up like:
+  // {
+  //   'A.AAPL': {
+  //     1719859200: { ... },
+  //     1719859201: { ... },
+  //     ...
+  //   },
+  //   ...
+  // }
+  const pointsBySymbolAndTimestamp = Object.entries(data).reduce(
+    (currentObjWithAllPointsBySymbols, [symbol, points]) => {
+      // Build lookup map for this symbol's points
+      const pointMap = new Map<number, ChartDataPoint>()
+      points.forEach((point) => {
+        pointMap.set(point.t, point)
+        allTimestamps.add(point.t)
+      })
+
+      return {
+        ...currentObjWithAllPointsBySymbols,
+        [symbol]: pointMap,
+      }
+    },
+    {} as Record<string, Map<number, ChartDataPoint>>
+  )
+
+  // Sort timestamps once
+  const sortedTimestamps = Array.from(allTimestamps).sort((a, b) => a - b)
+
+  // Fill in missing points for each symbol
+  // Will end up like:
+  // {
+  //   'A.AAPL': [
+  //     { ... },
+  //     { ... },
+  //     ...
+  //   ],
+  //   ...
+  // }
+  // This is what's used as chart data
+  return Object.entries(pointsBySymbolAndTimestamp).reduce(
+    (acc, [symbol, pointMap]) => {
+      let lastPoint: ChartDataPoint | null = null
+
+      const filledPoints = sortedTimestamps
+        .map((timestamp) => {
+          const pointForCurrentTimestamp = pointMap.get(timestamp)
+
+          // If we have one
+          // Great, return it or the map
+          if (pointForCurrentTimestamp) {
+            lastPoint = pointForCurrentTimestamp
+            return pointForCurrentTimestamp
+          }
+
+          // If not return null
+          // Need to filter out nulls later
+          // This can happen if the stock market has started
+          // Let's say apple and google have started trading
+          // But Meta has no trades yet
+          // Then it is right to show meta as 0 while it doesn't have any trades
+          // My point?
+          // In the beginning of the stock market, when comparing stocks, in the beginning of the day, some stocks will have no trades
+          // UI-wise doesn't look the best, but this is how it is as a fact
+          if (!lastPoint) return null
+
+          // If we have had a last point
+          // Return it with the timestamp
+          return {
+            ...lastPoint,
+            t: timestamp,
+          }
+        })
+        .filter((point): point is ChartDataPoint => point !== null)
+
+      return {
+        ...acc,
+        [symbol]: filledPoints,
+      }
+    },
+    {} as MultipleStocksData
+  )
+}
+```
+
+</details>
+
 # Tech used
 
 - React
@@ -1057,3 +1207,11 @@ export function useTimeframe() {
 - Zod
 - Vercel
 - WebSocket
+
+# License
+
+MIT
+
+I'm adding it so that I don't get questions again if you can use my code :3
+
+If it's open source, of course you can use it <3
