@@ -36,6 +36,7 @@ export function Autocomplete<ResultValue>({
     getInputProps,
     getItemProps,
     highlightedIndex,
+    reset,
   } = useCombobox({
     items: results,
     // See: https://github.com/downshift-js/downshift/issues/964#issuecomment-595059407
@@ -47,6 +48,7 @@ export function Autocomplete<ResultValue>({
     onSelectedItemChange: (changes) => {
       if (changes.selectedItem) {
         onSelect(changes.selectedItem)
+        reset()
       }
       onSelectedItemChange?.(changes)
     },
