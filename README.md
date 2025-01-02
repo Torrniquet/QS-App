@@ -424,16 +424,24 @@ Before we dive into some internals there, let's look at the a piece from useChar
 // Set state is referentially stable across re renders
 // Meaning it won't change and trigger re renders
 // So this is safe, and we can ignore the warning
-const throttledSetRealtimeData = useCallback(
+const throttledProcessUpdates = useCallback(
   throttle(
-    (newData: Array<ChartDataPoint>) => setRealtimeData(newData),
+    (
+      batchedNewPoints: Array<ChartDataPoint>,
+      existingPoints: Array<ChartDataPoint>
+    ) => {
+      const updatedData = [...existingPoints, ...batchedNewPoints].slice(
+        -MAX_DATA_POINTS
+      )
+      setRealtimeData(updatedData)
+      pendingUpdatesRef.current = []
+    },
     THROTTLE_TIME_FOR_REAL_TIME_DATA
   ),
   []
 )
 
 const isRealtime = timeframe === '1D'
-// Replace the entire WebSocket effect with:
 useEffect(() => {
   if (!symbol || !isRealtime) return
 
@@ -443,10 +451,7 @@ useEffect(() => {
 
   const messageHandler = (messages: Array<WebSocketMessage>) => {
     messages.forEach((msg) => {
-      console.log('msg', msg)
-
       const parsedMsg = chartDataWebSocketMessageSchema.parse(msg)
-
       const dataPoint: ChartDataPoint = {
         c: parsedMsg.c,
         h: parsedMsg.h,
@@ -456,13 +461,9 @@ useEffect(() => {
         t: parsedMsg.s,
         vw: parsedMsg.vw,
       }
-
-      console.log('new data', dataPoint)
-
-      throttledSetRealtimeData(
-        [...realtimeData, dataPoint].slice(-MAX_DATA_POINTS)
-      )
+      pendingUpdatesRef.current = [...pendingUpdatesRef.current, dataPoint]
     })
+    throttledProcessUpdates(pendingUpdatesRef.current, realtimeData)
   }
 
   polygonWS.addMessageHandler(subscription, messageHandler)
@@ -472,10 +473,10 @@ useEffect(() => {
     polygonWS.removeMessageHandler(subscription, messageHandler)
     polygonWS.unsubscribe(subscription)
   }
-}, [symbol, isRealtime, throttledSetRealtimeData, realtimeData])
+}, [isRealtime, realtimeData, symbol, throttledProcessUpdates])
 ```
 
-We're throttling the data to avoid too many updates. Otherwise it causes strain on the browser and the UI won't be as responsive.
+We're throttling the data to avoid too many updates. Otherwise it causes strain on the browser and the UI won't be as responsive. `pendingUpdatesRef` helps us keep track of the updates we need to process.
 
 `connectionState` is a local state that we use to keep track of the connection state. We can use this to display to the user whether we're connected or not.
 
@@ -662,6 +663,8 @@ The config is used to style the chart. As you can see, `c` and `v` are the only 
 ---
 
 Prefetching is the key player here.
+
+See code plus `prefetchQuery` from React Query documentation.
 
 </details>
 
@@ -999,6 +1002,37 @@ export function MultipleStocksChart({
 ```
 
 The code itself is well documented. It's worth noting that CHART_COLORS aren't the usual chart colors. I created a set of new variables specifically for the compare page to make sure it's easy to differentiate between the different stocks.
+
+</details>
+
+<details>
+  <summary>🍿 Global store for the timeframe</summary>
+
+---
+
+This is pretty cool. We're using React Query here.
+
+Now, you may want this per page basis. We're using this throughout the app. We only have to pages that use chart so it's ok.
+
+This is cool because it's a reactive global store, and if data doesn't exist, we just initialize it with the default value using `initialData`.
+
+It's nice because if you prefetch cards on search page, you can prefetch by timeframe. If the timeframe isn't set (in case you've been on the site for a longer time), it'll just fallback to the default value.
+
+```jsx
+/**
+ * This is a global store for the timeframe.
+ * It should never expire
+ */
+export function useTimeframe() {
+  const { data: timeframe } = useQuery({
+    queryKey: TIMEFRAME_KEY,
+    staleTime: Infinity,
+    initialData: '1D' as Timeframe,
+  })
+
+  return timeframe
+}
+```
 
 </details>
 
