@@ -52,14 +52,15 @@ export const api = {
     return parsedResults.data
   },
 
-  getPriceData: async (symbol: string) => {
-    const todayFormatted = format(new Date(), 'yyyy-MM-dd')
+  getPriceData: async (symbol: string, timeframe: Timeframe) => {
+    const config = getTimeframeConfig(timeframe)
 
     const [snapshotResponse, tradesResponse] = await Promise.all([
       rest.stocks.snapshotTicker(symbol),
       rest.stocks.trades(symbol, {
         limit: 30,
-        timestamp: todayFormatted,
+        'timestamp.gte': config.from,
+        'timestamp.lte': config.to,
       }),
     ])
 

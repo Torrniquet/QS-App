@@ -81,6 +81,11 @@ export function PriceChart({ symbol }: { symbol: string | undefined }) {
       queryKey: stockDetailKeys.technicals.rsi(symbol, timeframe),
       queryFn: () => api.getRSIData(symbol, timeframe),
     })
+
+    void queryClient.prefetchQuery({
+      queryKey: stockDetailKeys.price(symbol, timeframe),
+      queryFn: () => api.getPriceData(symbol, timeframe),
+    })
   }
 
   if (isChartDataError) {
