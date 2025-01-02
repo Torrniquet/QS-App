@@ -19,26 +19,26 @@ export const stockDetailKeys = {
   bySymbol: (symbol: string) => [...stockDetailKeys.all, symbol] as const,
   company: (symbol: string) =>
     [...stockDetailKeys.bySymbol(symbol), 'company'] as const,
-  price: (symbol: string) =>
-    [...stockDetailKeys.bySymbol(symbol), 'price'] as const,
-  chart: (symbol: string, timeframe: string) =>
+  price: (symbol: string, timeframe: Timeframe) =>
+    [...stockDetailKeys.bySymbol(symbol), 'price', timeframe] as const,
+  chart: (symbol: string, timeframe: Timeframe) =>
     [...stockDetailKeys.bySymbol(symbol), 'chart', timeframe] as const,
   technicals: {
-    rsi: (symbol: string, timeframe: string) =>
+    rsi: (symbol: string, timeframe: Timeframe) =>
       [
         ...stockDetailKeys.bySymbol(symbol),
         'technicals',
         'rsi',
         timeframe,
       ] as const,
-    macd: (symbol: string, timeframe: string) =>
+    macd: (symbol: string, timeframe: Timeframe) =>
       [
         ...stockDetailKeys.bySymbol(symbol),
         'technicals',
         'macd',
         timeframe,
       ] as const,
-    sma: (symbol: string, timeframe: string) =>
+    sma: (symbol: string, timeframe: Timeframe) =>
       [
         ...stockDetailKeys.bySymbol(symbol),
         'technicals',
