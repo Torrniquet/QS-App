@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { stockDetailKeys } from '@/lib/queryKeys'
 import { Timeframe } from '@/lib/timeframe'
 import {
@@ -12,7 +12,7 @@ import {
 import { PriceData } from '@/lib/schemas'
 import { api } from '@/lib/api'
 import { throttle } from 'lodash'
-import { THROTTLE_TIME_FOR_REAL_TIME_DATA } from '../constants'
+import { THROTTLE_TIME_FOR_REAL_TIME_DATA } from '@/lib/constants'
 
 const MAX_TRADES = 500
 
@@ -26,59 +26,86 @@ export function useStockPrice({
   const [connectionState, setConnectionState] =
     useState<ConnectionState>('disconnected')
 
-  // Get initial snapshot
   const {
-    data: snapshot,
+    data: initialSnapshot,
     isLoading,
     isError,
     error,
   } = useQuery({
-    queryKey: stockDetailKeys.price(symbol as string),
-    queryFn: () => api.getPriceData(symbol as string),
+    queryKey: stockDetailKeys.price(symbol as string, timeframe),
+    queryFn: () => api.getPriceData(symbol as string, timeframe),
     enabled: !!symbol,
   })
 
-  const [liveData, setLiveData] = useState<PriceData | null>(snapshot || null)
+  const [liveData, setLiveData] = useState<PriceData | null>(
+    initialSnapshot || null
+  )
 
   useEffect(() => {
-    if (snapshot) setLiveData(snapshot)
-  }, [snapshot])
+    if (initialSnapshot) setLiveData(initialSnapshot)
+  }, [initialSnapshot])
+
+  // To batch updates
+  // This is so we don't lose data since we're throttling
+  const pendingUpdatesRef = useRef<Array<PriceDataWebSocketMessage>>([])
 
   // Hooks rule will complain here saying deps are unknown
   // However this is fine
   // Set state is referentially stable across re renders
   // Meaning it won't change and trigger re renders
   // So this is safe, and we can ignore the warning
-  const throttledSetLiveData = useCallback(
-    throttle((prevData: PriceData | null, msg: PriceDataWebSocketMessage) => {
-      if (!prevData) return null
-      return {
-        ...prevData,
-        price: msg.p,
-        volume: prevData.volume + msg.s,
-        lastUpdate: msg.t,
-        trades: [
-          {
-            price: msg.p,
-            size: msg.s,
-            timestamp: msg.t,
-            conditions: msg.c || [],
-          },
-          ...prevData.trades.slice(0, MAX_TRADES),
-        ],
-      }
-    }, THROTTLE_TIME_FOR_REAL_TIME_DATA),
+  const throttledProcessUpdates = useCallback(
+    throttle(
+      (
+        batchedNewMessages: Array<PriceDataWebSocketMessage>,
+        existingMessages: PriceData | null
+      ) => {
+        if (!existingMessages) return
+
+        // Get the latest message for price/timestamp
+        const latestMsg = batchedNewMessages.at(-1)
+
+        // should never happen
+        if (!latestMsg) return
+
+        // Create new trades once
+        const newTrades = batchedNewMessages.map((message) => ({
+          price: message.p,
+          size: message.s,
+          timestamp: message.t,
+          conditions: message.c || [],
+        }))
+
+        const batchVolume = batchedNewMessages.reduce(
+          (sum, msg) => sum + msg.s,
+          0
+        )
+
+        const updatedData = {
+          ...existingMessages,
+          price: latestMsg.p, // Use latest price
+          volume: existingMessages.volume + batchVolume,
+          lastUpdate: latestMsg.t,
+          trades: [...newTrades, ...existingMessages.trades].slice(
+            0,
+            MAX_TRADES
+          ),
+        }
+
+        setLiveData(updatedData)
+        pendingUpdatesRef.current = []
+      },
+      THROTTLE_TIME_FOR_REAL_TIME_DATA
+    ),
     []
   )
 
   const isRealtime = timeframe === '1D'
-  // Replace the entire WebSocket effect with:
   useEffect(() => {
-    if (!symbol || !snapshot || !isRealtime) return
+    if (!symbol || !initialSnapshot || !isRealtime) return
 
     const subscription = `T.${symbol}` as const
 
-    // Handle connection state
     polygonWS.addConnectionStateHandler(setConnectionState)
 
     // Handle messages
@@ -87,9 +114,10 @@ export function useStockPrice({
         // Since a specific subscription
         // We can be sure that the message is a price data message
         const parsedMsg = priceDataWebSocketMessageSchema.parse(msg)
-
-        throttledSetLiveData(liveData, parsedMsg)
+        pendingUpdatesRef.current = [...pendingUpdatesRef.current, parsedMsg]
       })
+
+      throttledProcessUpdates(pendingUpdatesRef.current, liveData)
     }
 
     polygonWS.addMessageHandler(subscription, messageHandler)
@@ -99,7 +127,7 @@ export function useStockPrice({
       polygonWS.removeMessageHandler(subscription, messageHandler)
       polygonWS.unsubscribe(subscription)
     }
-  }, [symbol, snapshot, isRealtime, throttledSetLiveData, liveData])
+  }, [isRealtime, liveData, initialSnapshot, symbol, throttledProcessUpdates])
 
   return {
     priceData: liveData,

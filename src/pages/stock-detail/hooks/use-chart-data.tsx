@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { throttle } from 'lodash'
 import { Timeframe } from '@/lib/timeframe'
 import { stockDetailKeys } from '@/lib/queryKeys'
@@ -11,9 +11,10 @@ import {
 } from '@/lib/websocket'
 import { ChartDataPoint } from '@/lib/schemas'
 import { api } from '@/lib/api'
-import { THROTTLE_TIME_FOR_REAL_TIME_DATA } from '../constants'
-
-const MAX_DATA_POINTS = 500 // Full trading day + some buffer
+import {
+  MAX_DATA_POINTS,
+  THROTTLE_TIME_FOR_REAL_TIME_DATA,
+} from '@/lib/constants'
 
 export function useChartData({
   symbol,
@@ -41,21 +42,33 @@ export function useChartData({
     if (historicalData) setRealtimeData(historicalData)
   }, [historicalData])
 
+  // To batch updates
+  // This is so we don't lose data since we're throttling
+  const pendingUpdatesRef = useRef<Array<ChartDataPoint>>([])
+
   // Hooks rule will complain here saying deps are unknown
   // However this is fine
   // Set state is referentially stable across re renders
   // Meaning it won't change and trigger re renders
   // So this is safe, and we can ignore the warning
-  const throttledSetRealtimeData = useCallback(
+  const throttledProcessUpdates = useCallback(
     throttle(
-      (newData: Array<ChartDataPoint>) => setRealtimeData(newData),
+      (
+        batchedNewPoints: Array<ChartDataPoint>,
+        existingPoints: Array<ChartDataPoint>
+      ) => {
+        const updatedData = [...existingPoints, ...batchedNewPoints].slice(
+          -MAX_DATA_POINTS
+        )
+        setRealtimeData(updatedData)
+        pendingUpdatesRef.current = []
+      },
       THROTTLE_TIME_FOR_REAL_TIME_DATA
     ),
     []
   )
 
   const isRealtime = timeframe === '1D'
-  // Replace the entire WebSocket effect with:
   useEffect(() => {
     if (!symbol || !isRealtime) return
 
@@ -65,10 +78,7 @@ export function useChartData({
 
     const messageHandler = (messages: Array<WebSocketMessage>) => {
       messages.forEach((msg) => {
-        console.log('msg', msg)
-
         const parsedMsg = chartDataWebSocketMessageSchema.parse(msg)
-
         const dataPoint: ChartDataPoint = {
           c: parsedMsg.c,
           h: parsedMsg.h,
@@ -78,13 +88,10 @@ export function useChartData({
           t: parsedMsg.s,
           vw: parsedMsg.vw,
         }
-
-        console.log('new data', dataPoint)
-
-        throttledSetRealtimeData(
-          [...realtimeData, dataPoint].slice(-MAX_DATA_POINTS)
-        )
+        pendingUpdatesRef.current = [...pendingUpdatesRef.current, dataPoint]
       })
+
+      throttledProcessUpdates(pendingUpdatesRef.current, realtimeData)
     }
 
     polygonWS.addMessageHandler(subscription, messageHandler)
@@ -94,7 +101,7 @@ export function useChartData({
       polygonWS.removeMessageHandler(subscription, messageHandler)
       polygonWS.unsubscribe(subscription)
     }
-  }, [symbol, isRealtime, throttledSetRealtimeData, realtimeData])
+  }, [isRealtime, realtimeData, symbol, throttledProcessUpdates])
 
   return {
     chartData: isRealtime ? realtimeData : historicalData,
