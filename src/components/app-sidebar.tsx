@@ -1,4 +1,10 @@
-import { Search, ListChecks, GitCompare, LayoutDashboard } from 'lucide-react'
+import {
+  Search,
+  ListChecks,
+  GitCompare,
+  LayoutDashboard,
+  BadgeDollarSign,
+} from 'lucide-react'
 import {
   Sidebar,
   SidebarContent,
@@ -36,11 +42,13 @@ export function AppSidebar() {
       <SidebarHeader>
         <div className="flex items-center gap-2 px-4 py-2">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-            <LayoutDashboard className="h-4 w-4" />
+            <BadgeDollarSign className="h-4 w-4" />
           </div>
           <div className="flex flex-col">
-            <span className="text-sm font-semibold">Dashboard</span>
-            <span className="text-xs text-muted-foreground">lmao</span>
+            <span className="text-sm font-semibold">Himura</span>
+            <span className="text-xs text-muted-foreground">
+              Stock Market Explorer
+            </span>
           </div>
         </div>
       </SidebarHeader>
