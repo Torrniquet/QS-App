@@ -1,12 +1,20 @@
 # Himura
 
-I built a stock market explorer.
+I built a stock market explorer (not responsive).
 
 This let's you search, explore, bookmark and compare stocks.
 
-I had a ton of fun working with sockets and charts haha
+I had a ton of fun working with sockets and charts haha 😄
 
-I didn't build it mobile first. Some aspects are more responsive than others thanks to shadcn.
+https://github.com/user-attachments/assets/d871b836-301f-4a34-89b2-edec40cf5a57
+
+Sorry video is too fast 😭
+
+Had to compress and make it faster to get it under 10mb for github 🫠
+
+---
+
+I didn't build it mobile first. Fun and learning was the main focus. Some aspects are more responsive than others thanks to shadcn.
 
 I will say though, the Polygon's SDK is a bit of a mess. It's so loosely typed. I did some inner typescript magic to have some stricter type safety.
 
