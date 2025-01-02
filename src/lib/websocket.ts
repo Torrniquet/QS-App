@@ -62,8 +62,6 @@ const statusMessageSchema = z.object({
   message: z.string(),
 })
 
-type StatusMessage = z.infer<typeof statusMessageSchema>
-
 // Taken from the Polygon API docs: https://polygon.io/docs/stocks/ws_stocks_t
 export const priceDataWebSocketMessageSchema = z.object({
   ev: z.literal('T'),
@@ -87,14 +85,14 @@ export const chartDataWebSocketMessageSchema = z.object({
   ev: z.literal('A'),
   sym: z.string(),
   v: z.number(), // volume
-  av: z.number(), // accumulated volume
-  op: z.number(), // official opening price
-  vw: z.number(), // volume weighted price
+  av: z.number().optional(), // accumulated volume
+  op: z.number().optional(), // official opening price
+  vw: z.number().optional(), // volume weighted price
   o: z.number(), // open
   c: z.number(), // close
   h: z.number(), // high
   l: z.number(), // low
-  a: z.number(), // today's VWAP
+  a: z.number().optional(), // today's VWAP
   z: z.number(), // average trade size
   s: z.number(), // start timestamp
   e: z.number(), // end timestamp
@@ -173,9 +171,17 @@ class PolygonWebSocket<RawStringGeneric extends string> {
     }
 
     this.ws.onmessage = (event) => {
-      const messages = z
+      const messagesResult = z
         .array(webSocketMessageSchema)
-        .parse(JSON.parse(event.data as string))
+        .safeParse(JSON.parse(event.data as string))
+
+      if (messagesResult.error) {
+        console.log('event', event)
+        console.error('Error parsing WebSocket message', messagesResult.error)
+        return
+      }
+
+      const messages = messagesResult.data
 
       this.handleStatusMessages(messages)
       this.handleDataMessages(messages)
@@ -198,16 +204,18 @@ class PolygonWebSocket<RawStringGeneric extends string> {
   private handleDataMessages(messages: Array<WebSocketMessage>) {
     this.messageHandlers.forEach((handlers, subscription) => {
       const relevantMessages = messages.filter(
-        (
-          msg:
-            | PriceDataWebSocketMessage
-            | ChartDataWebSocketMessage
-            | StatusMessage
-        ): msg is PriceDataWebSocketMessage | ChartDataWebSocketMessage => {
+        (msg): msg is PriceDataWebSocketMessage | ChartDataWebSocketMessage => {
           if (msg.ev === 'status') return false
 
-          const [eventType, symbol] = subscription.split('.')
-          return msg.ev === eventType && msg.sym === symbol
+          // Split by comma to handle multiple subscriptions e.g. `A.AAPL,A.MSFT`
+          // If single subscription, still ok, would be just one string anyways -> ['A.AAPL']
+          const subscriptions = subscription.split(',')
+
+          // Check if any of the subscriptions match this message
+          return subscriptions.some((sub) => {
+            const [eventType, symbol] = sub.split('.')
+            return msg.ev === eventType && msg.sym === symbol
+          })
         }
       )
 
@@ -219,11 +227,13 @@ class PolygonWebSocket<RawStringGeneric extends string> {
 
   private handleStatusMessages(messages: Array<WebSocketMessage>) {
     for (const msg of messages) {
-      if (msg.ev === 'status' && msg.status === 'auth_success') {
-        console.log('WebSocket Authenticated')
-        this.updateConnectionState('authenticated')
-        this.subscriptions.forEach((sub) => this.subscribe(sub))
-        break // Since auth_success only happens once
+      if (msg.ev === 'status') {
+        if (msg.status === 'auth_success') {
+          console.log('WebSocket Authenticated')
+          this.updateConnectionState('authenticated')
+          this.subscriptions.forEach((sub) => this.subscribe(sub))
+          break // Since auth_success only happens once
+        }
       }
     }
   }
