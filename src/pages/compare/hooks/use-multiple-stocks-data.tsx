@@ -14,6 +14,7 @@ import { STOCK_LIMITS } from '../constants'
 import { api } from '@/lib/api'
 import { THROTTLE_TIME_FOR_REAL_TIME_DATA } from '@/lib/constants'
 import { throttle } from 'lodash'
+import { normalizeMultipleStocksData } from '@/lib/utils'
 
 export function useMultipleStockData({
   stocks,
@@ -49,31 +50,23 @@ export function useMultipleStockData({
         batchedUpdates: Record<string, Array<ChartDataPoint>>,
         currentData: MultipleStocksData
       ) => {
-        const updatedData = { ...currentData }
-
-        // When need to construct the updatedData to look like the currentData
-        // will end up looking like:
-        // {
-        //   'AAPL': [
-        //     {
-        //       ...currentData['AAPL'],
-        //       ...batchedUpdates['AAPL'],
-        //     }
-        //   ]
-        // }
-        Object.entries(batchedUpdates).forEach(
-          ([symbol, newPointsForSymbol]) => {
-            const existingPointsForSymbol = currentData[symbol] || []
-
-            updatedData[symbol] = [
-              ...existingPointsForSymbol,
-              ...newPointsForSymbol,
-            ].slice(-STOCK_LIMITS.MAX_DATA_POINTS)
-          }
+        // First, merge current and new data for each symbol
+        // In the end we need to process all the data to ensure it looks good from
+        // beginning to end and timestamps aren't messed up
+        const dataWithNewPoints = Object.entries(batchedUpdates).reduce(
+          (acc, [symbol, newPoints]) => ({
+            ...acc,
+            [symbol]: [...(currentData[symbol] || []), ...newPoints].slice(
+              -STOCK_LIMITS.MAX_DATA_POINTS
+            ),
+          }),
+          { ...currentData }
         )
 
-        setRealtimeData(updatedData)
+        // Then normalize the merged data
+        const finalData = normalizeMultipleStocksData(dataWithNewPoints)
 
+        setRealtimeData(finalData)
         pendingUpdatesRef.current = {}
       },
       THROTTLE_TIME_FOR_REAL_TIME_DATA

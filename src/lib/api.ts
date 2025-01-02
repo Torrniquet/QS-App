@@ -11,6 +11,7 @@ import {
 import { rest } from './sdk'
 import { z } from 'zod'
 import { TECHNICAL_INDICATOR_DATA_LIMIT } from './constants'
+import { normalizeMultipleStocksData } from './utils'
 
 const STANDARD_MACD_SHORT_WINDOW = 12
 const STANDARD_MACD_LONG_WINDOW = 26
@@ -164,9 +165,13 @@ export const api = {
       symbols.map((symbol) => api.getChartData(symbol, timeframe))
     )
 
-    return symbols.reduce((acc, symbol, index) => {
+    // First create the raw data
+    const rawData = symbols.reduce((acc, symbol, index) => {
       acc[symbol] = dataArrays[index]
       return acc
     }, {} as MultipleStocksData)
+
+    // Then normalize it to ensure all timestamps are aligned
+    return normalizeMultipleStocksData(rawData)
   },
 }
