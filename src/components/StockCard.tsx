@@ -34,8 +34,8 @@ export function StockCard({ stock }: { stock: Stock }) {
     })
 
     void queryClient.prefetchQuery({
-      queryKey: stockDetailKeys.price(stock.symbol),
-      queryFn: () => api.getPriceData(stock.symbol),
+      queryKey: stockDetailKeys.price(stock.symbol, timeframe),
+      queryFn: () => api.getPriceData(stock.symbol, timeframe),
     })
   }
 
