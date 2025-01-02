@@ -1,3 +1,5 @@
+import { MAX_DATA_POINTS } from '@/lib/constants'
+
 export const STOCK_CHART_COMPARISON_COLORS = [
   '--stock-comparison-chart-1',
   '--stock-comparison-chart-2',
@@ -17,7 +19,7 @@ export const STOCK_LIMITS = {
    * Maximum number of data points to fetch/display
    * Sized to accommodate a full trading day plus buffer
    */
-  MAX_DATA_POINTS: 500,
+  MAX_DATA_POINTS,
 
   /** Maximum number of results to show in autocomplete search */
   SEARCH_RESULTS_LIMIT: 20,

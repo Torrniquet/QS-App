@@ -10,7 +10,6 @@ import {
 } from './schemas'
 import { rest } from './sdk'
 import { z } from 'zod'
-import { format } from 'date-fns'
 import { TECHNICAL_INDICATOR_DATA_LIMIT } from './constants'
 
 const STANDARD_MACD_SHORT_WINDOW = 12

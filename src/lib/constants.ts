@@ -35,4 +35,18 @@ export const NUMBER_SUFFIXES = {
   THOUSAND: 'K',
 } as const
 
+/**
+ * A number that is large enough but not unreadable when looking at a chart.
+ */
 export const TECHNICAL_INDICATOR_DATA_LIMIT = 200
+
+/**
+ * Throttle time for real-time data to not overwhelm browser.
+ */
+export const THROTTLE_TIME_FOR_REAL_TIME_DATA = 500
+
+/**
+ * Maximum number of data points to fetch/display
+ * Sized to accommodate a full trading day plus buffer
+ */
+export const MAX_DATA_POINTS = 500
