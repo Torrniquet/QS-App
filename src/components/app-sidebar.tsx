@@ -1,10 +1,4 @@
-import {
-  Search,
-  ListChecks,
-  GitCompare,
-  LayoutDashboard,
-  BadgeDollarSign,
-} from 'lucide-react'
+import { Search, ListChecks, GitCompare, BadgeDollarSign } from 'lucide-react'
 import {
   Sidebar,
   SidebarContent,
