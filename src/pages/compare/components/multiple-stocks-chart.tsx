@@ -7,7 +7,7 @@ import {
 import { ChartDataPoint } from '@/lib/schemas'
 import { getTimeFormatter, Timeframe } from '@/lib/timeframe'
 import { useMemo } from 'react'
-import { CHART_COLORS } from '../constants'
+import { STOCK_CHART_COMPARISON_COLORS } from '../constants'
 import { CartesianGrid, Line, LineChart, XAxis, YAxis } from 'recharts'
 
 // This creates the chart config dynamically
@@ -19,11 +19,11 @@ import { CartesianGrid, Line, LineChart, XAxis, YAxis } from 'recharts'
 // }
 function createChartConfig(symbols: Array<string>) {
   return symbols.reduce((config, symbol, index) => {
-    if (index >= CHART_COLORS.length) return config // Safety check to not exceed our colors
+    if (index >= STOCK_CHART_COMPARISON_COLORS.length) return config // Safety check to not exceed our colors
 
     config[symbol] = {
       label: symbol,
-      color: `hsl(var(${CHART_COLORS[index]}))`, // Using shadcn's HSL format
+      color: `hsl(var(${STOCK_CHART_COMPARISON_COLORS[index]}))`, // Using shadcn's HSL format
     }
     return config
   }, {} as ChartConfig)
