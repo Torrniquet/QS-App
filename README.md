@@ -1,4 +1,4 @@
-# Himura
+# QS App
 
 I built a stock market explorer (not responsive).
 
